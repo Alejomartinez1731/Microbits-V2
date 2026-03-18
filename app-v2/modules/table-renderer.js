@@ -8,7 +8,7 @@
 
 import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
-import { formatearFecha, calcularPorcentaje, paginar } from '@modules/utils.js';
+import { formatearFecha, calcularPorcentaje } from '@modules/utils.js';
 import { info, warn, error } from '@modules/diagnostics.js';
 
 // ============================================
