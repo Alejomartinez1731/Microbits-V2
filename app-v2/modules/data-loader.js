@@ -14,6 +14,9 @@ import { DOM } from '@modules/dom.js';
 import { mostrarLoading, ocultarLoading, mostrarToast } from '@modules/dom.js';
 import { formatearFecha } from '@modules/utils.js';
 import { info, warn, error, success } from '@modules/diagnostics.js';
+import { actualizarMetricas } from '@modules/metrics.js';
+import { actualizarGraficos } from '@modules/charts.js';
+import { renderizarTablaActual } from '@modules/table-renderer.js';
 
 // ============================================
 // DATOS DE EJEMPLO (FALLBACK)
@@ -158,7 +161,7 @@ async function renderizarCursos(cursos) {
         const { id, nombre, nivel, estudiantesHabilitados } = curso;
 
         // Sanitizar valores para prevenir XSS
-        const safeId = encodeURIComponent(String(id).replace(/'/g, '%27');
+        const safeId = encodeURIComponent(String(id).replace(/'/g, '%27'));
         const safeNombre = String(nombre).replace(/"/g, '\\"');
 
         return `
@@ -267,6 +270,11 @@ async function cargarTodosDatos() {
                 temas: datosNormalizados.temas.length,
                 contador: datosNormalizados.contador.length
             });
+
+            // Actualizar UI con los datos
+            actualizarMetricas();
+            actualizarGraficos(datosNormalizados);
+            renderizarTablaActual();
 
             mostrarToast('Datos actualizados correctamente', 'success');
             return true;

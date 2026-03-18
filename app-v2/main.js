@@ -14,19 +14,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ============================================
         console.log('📦 Cargando módulos core...');
 
-        const [
-            { CONFIG, isLocalhost } = await import('@modules/config.js'),
-            { initState } = await import('@modules/state.js'),
-            { dom, init: initDOM } = await import('@modules/dom.js'),
-            { setNivelLog, info: logInfo, success: logSuccess, error: logError } = await import('@modules/diagnostics.js'),
-            { cargarCursos } = await import('@modules/data-loader.js')
-        ] = await Promise.all([
+        const results = await Promise.all([
             import('@modules/config.js'),
             import('@modules/state.js'),
             import('@modules/dom.js'),
             import('@modules/diagnostics.js'),
-            import('@modules/data-loader.js')
+            import('@modules/data-loader.js'),
+            import('@modules/navigation.js'),
+            import('@modules/table-renderer.js'),
+            import('@modules/charts.js'),
+            import('@modules/metrics.js')
         ]);
+
+        const [
+            { CONFIG, isLocalhost },
+            { initState },
+            { dom, init: initDOM },
+            { setNivelLog, info: logInfo, success: logSuccess, error: logError },
+            { cargarCursos },
+            { inicializarNavegacion },
+            { renderizarTablaActual },
+            { inicializarConfiguracionGlobal },
+            { inicializarMetricasInteractivas, actualizarMetricas }
+        ] = results;
 
         console.log('✅ Módulos core cargados');
 
@@ -59,17 +69,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         // INICIALIZAR NAVEGACIÓN
         // ============================================
         console.log('🧭 Inicializando navegación...');
-        // NOTA: Este módulo aún no existe, se creará en Fase 4
-        // const { navigation } = await import('@modules/navigation.js');
-        // navigation.inicializarNavegacion();
+        inicializarNavegacion();
+
+        // ============================================
+        // INICIALIZAR GRÁFICOS
+        // ============================================
+        console.log('📈 Inicializando gráficos...');
+        inicializarConfiguracionGlobal();
 
         // ============================================
         // INICIALIZAR MÉTRICAS
         // ============================================
         console.log('📊 Inicializando métricas...');
-        // NOTA: Este módulo aún no existe, se creará en Fase 4
-        // const { metrics } = await import('@modules/metrics.js');
-        // metrics.inicializarMetricasInteractivas();
+        inicializarMetricasInteractivas();
 
         // ============================================
         // CARGAR DATOS INICIALES
@@ -124,8 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         logSuccess('✅ Microbits V2 inicializado correctamente');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('');
-        console.log('📊 Módulos cargados: 5/15 (Fase 2 completada)');
-        console.log('📦 Próximos módulos: Fase 3 (Datos)');
+        console.log('📊 Módulos cargados: 12/15 (Fase 4 completada)');
+        console.log('📦 Próximos módulos: Fase 5 (Calendar + Events)');
         console.log('');
         console.log('🔧 Configuración:');
         console.log(`   - Rate Limiting: ${CONFIG.rateLimit.enabled ? '✅' : '❌'}`);
@@ -135,8 +147,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`   - Persistencia: ${CONFIG.storage.enabled ? '✅' : '❌'}`);
         console.log('');
         console.log('📖 Para continuar con el desarrollo:');
-        console.log('   Fase 3: Crear api.js, data-normalizer.js, data-loader.js');
-        console.log('   Fase 4: Crear navigation.js, table-renderer.js, charts.js, metrics.js');
         console.log('   Fase 5: Crear calendar.js, events.js');
         console.log('   Fase 6: Integración final y testing');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
