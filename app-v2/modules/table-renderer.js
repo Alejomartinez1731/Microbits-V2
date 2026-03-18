@@ -18,7 +18,7 @@ import { info, warn, error } from '@modules/diagnostics.js';
 /**
  * Renderiza la tabla de estudiantes
  */
-export function renderizarEstudiantes() {
+function renderizarEstudiantes() {
     try {
         const estudiantes = getDatos('estudiantes') || [];
         const busqueda = getBusqueda();
@@ -80,7 +80,7 @@ export function renderizarEstudiantes() {
 /**
  * Renderiza la tabla de preguntas frecuentes
  */
-export function renderizarPreguntas() {
+function renderizarPreguntas() {
     try {
         const preguntas = getDatos('preguntas') || [];
         const busqueda = getBusqueda();
@@ -171,7 +171,7 @@ function extraerTimestamp(preg) {
 /**
  * Renderiza la tabla de estudiantes más activos
  */
-export function renderizarActivos() {
+function renderizarActivos() {
     try {
         const contador = getDatos('contador') || [];
         const busqueda = getBusqueda();
@@ -245,7 +245,7 @@ export function renderizarActivos() {
 /**
  * Renderiza la tabla de temas más consultados
  */
-export function renderizarTemas() {
+function renderizarTemas() {
     try {
         const temas = getDatos('temas') || [];
         const busqueda = getBusqueda();
@@ -346,7 +346,7 @@ export function renderizarTemas() {
 /**
  * Renderiza la tabla según el tab actual
  */
-export function renderizarTablaActual() {
+function renderizarTablaActual() {
     try {
         const tabActual = getTabActual();
 
