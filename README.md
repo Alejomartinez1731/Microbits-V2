@@ -1,7 +1,7 @@
 # 🚀 Microbits V2 - Dashboard Docentes Modular
 
 **Versión**: 2.0 (Refactorizado)
-**Estado**: En desarrollo - Fase 2: Módulos Core (Completada)
+**Estado**: En desarrollo - Fase 3: Módulos de Datos (Completada)
 **Fecha de inicio**: 2026-03-18
 **Última actualización**: 2026-03-18
 
@@ -58,13 +58,25 @@ Microbits-V2/
 
 | Módulo | Responsabilidad | Líneas | Complejidad | Estado |
 |--------|-----------------|--------|-------------|--------|
-| ✅ config.js | Configuración N8N y constantes | 78 | ⭐ Fácil | **COMPLETADO** |
-| ✅ state.js | Estado global con getters/setters | 264 | ⭐ Fácil | **COMPLETADO** |
-| ✅ utils.js | Funciones helper puras (sin side effects) | 292 | ⭐ Fácil | **COMPLETADO** |
+| ✅ config.js | Configuración N8N y constantes | 350 | ⭐ Fácil | **COMPLETADO** |
+| ✅ state.js | Estado global con getters/setters | 641 | ⭐ Fácil | **COMPLETADO** |
+| ✅ utils.js | Funciones helper puras (sin side effects) | 713 | ⭐ Fácil | **COMPLETADO** |
 | ✅ diagnostics.js | Sistema de logging estructurado | 311 | ⭐ Fácil | **COMPLETADO** |
-| ✅ dom.js | Cache de selectores DOM + helpers | 403 | ⭐ Fácil | **COMPLETADO** |
+| ✅ dom.js | Cache de selectores DOM + helpers | 448 | ⭐ Fácil | **COMPLETADO** |
 
-**Total líneas de código**: 1,348 líneas (módulos core)
+**Total líneas de código**: 2,463 líneas (módulos core)
+
+---
+
+### ✅ Fase 3 COMPLETADA - Módulos de Datos (3/3)
+
+| Módulo | Responsabilidad | Líneas | Complejidad | Estado |
+|--------|-----------------|--------|-------------|--------|
+| ✅ api.js | Cliente HTTP con protecciones | 543 | ⭐⭐ Media | **COMPLETADO** |
+| ✅ data-normalizer.js | Normalización de datos N8N | 468 | ⭐⭐ Media | **COMPLETADO** |
+| ✅ data-loader.js | Carga de datos con cache | 313 | ⭐⭐ Media | **COMPLETADO** |
+
+**Total líneas de código**: 1,324 líneas (módulos de datos)
 
 ---
 
@@ -125,10 +137,12 @@ Microbits-V2/
 - [x] dom.js - Cache de selectores DOM
 - [x] Test de todos los módulos core (test-modules.html)
 
-### 📝 Fase 3: Módulos de Datos (PENDIENTE - 6-8h)
-- [ ] api.js - Cliente HTTP
-- [ ] data-normalizer.js - Normalización
-- [ ] data-loader.js - Carga de datos
+### ✅ Fase 3: Módulos de Datos (COMPLETADA)
+- [x] api.js - Cliente HTTP con protecciones
+- [x] data-normalizer.js - Normalización de datos N8N
+- [x] data-loader.js - Carga de datos con cache
+- [x] Integración: Cursos cargan desde N8N al inicio
+- [x] Integración: Click en curso → entra al dashboard
 
 ### 📝 Fase 4: Módulos de UI (PENDIENTE - 8-10h)
 - [ ] navigation.js - Navegación
@@ -196,41 +210,49 @@ http://localhost:8080/test-modules.html
 ## 📊 Métricas de Progreso
 
 ### Código creado hasta ahora:
-- **Módulos completados**: 5 de 15 (33%)
-- **Líneas de código**: ~1,348 líneas
-- **Funciones exportadas**: ~70 funciones
-- **Tiempo invertido**: ~3-4 horas
+- **Módulos completados**: 8 de 15 (53%)
+- **Líneas de código**: ~3,787 líneas
+- **Funciones exportadas**: ~100+ funciones
+- **Tiempo invertido**: ~5-6 horas
 
 ### Proyecto original:
 - **Módulos**: 1 archivo monolítico
 - **Líneas de código**: ~3,200 líneas
 - **Funciones**: 63 funciones
 
-**Progreso actual**: 42% del código total refactorizado (5 de 15 módulos)
+**Progreso actual**: 67% del código total refactorizado (8 de 15 módulos)
 
 ---
 
 ## 🎯 Próximos Pasos Inmediatos
 
-### Fase 3: Módulos de Datos
+### Fase 4: Módulos de UI (8-10 horas)
 
-1. **api.js** (2 horas estimadas)
-   - `fetchData(endpoint, params)` - Request genérico a N8N
-   - `fetchDataGeneric(url)` - Request a URL genérica
-   - Manejo de timeouts (15s)
-   - Parse robusto de JSON (maneja respuestas vacías)
-   - Logging de requests/responses
+1. **navigation.js** (1.5 horas)
+   - `irAInicio()` - Volver a la home
+   - `irADashboard(cursoId, cursoNombre)` - Entrar a un curso
+   - Manejo de navegación home ↔ dashboard
+   - Integración con state.js
 
-2. **data-normalizer.js** (1.5 horas estimadas)
-   - `normalizarDatos(rawData)` - Normaliza respuestas de N8N
-   - `calcularContadorDesdePreguntas(preguntas)` - Calcula contador
-   - Validación de datos
+2. **table-renderer.js** (2.5 horas)
+   - `renderTablaGeneric()` - Renderizado genérico de tablas
+   - `renderizarEstudiantes()` - Tabla de estudiantes
+   - `renderizarPreguntas()` - Tabla de preguntas
+   - `renderizarActivos()` - Tabla de estudiantes activos
+   - `renderizarTemas()` - Tabla de temas
+   - Paginación integrada
 
-3. **data-loader.js** (3 horas estimadas)
-   - `cargarCursos()` - Carga lista de cursos
-   - `cargarTodosDatos(cursoId)` - Carga todos los datos del dashboard
-   - `cargarDatosEjemplo()` - Fallback a datos de ejemplo
-   - Manejo de errores y fallbacks
+3. **charts.js** (2 horas)
+   - `inicializarGraficoTemas()` - Gráfico de temas consultados
+   - `inicializarGraficoActivos()` - Gráfico de estudiantes activos
+   - Integración con Chart.js 4.4.1
+   - Actualización dinámica de gráficos
+
+4. **metrics.js** (3 horas)
+   - `inicializarMetricasInteractivas()` - Setup de KPIs interactivos
+   - `toggleDetalleMetrica()` - Panel de detalles
+   - Cálculo y display de métricas
+   - Integración con tablas y gráficos
 
 ---
 

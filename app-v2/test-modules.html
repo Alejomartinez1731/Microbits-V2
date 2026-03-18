@@ -86,7 +86,10 @@
             "@modules/state.js": "./modules/state.js",
             "@modules/utils.js": "./modules/utils.js",
             "@modules/diagnostics.js": "./modules/diagnostics.js",
-            "@modules/dom.js": "./modules/dom.js"
+            "@modules/dom.js": "./modules/dom.js",
+            "@modules/api.js": "./modules/api.js",
+            "@modules/data-normalizer.js": "./modules/data-normalizer.js",
+            "@modules/data-loader.js": "./modules/data-loader.js"
         }
     }
     </script>
@@ -98,7 +101,7 @@
         const progressText = document.getElementById('progress-text');
 
         let testsPassed = 0;
-        let testsTotal = 5;
+        let testsTotal = 8;
 
         function updateProgress(current, total) {
             const percentage = Math.round((current / total) * 100);
@@ -215,6 +218,63 @@
                 updateProgress(5, testsTotal);
             }
 
+            // Test 6: api.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { fetchData, CONFIG: API_CONFIG, buildEndpointUrl, getTimeoutForEndpoint } = await import('@modules/api.js');
+                const urlBuilt = buildEndpointUrl('cursos');
+                const timeout = getTimeoutForEndpoint('cursos');
+
+                addTest(
+                    'api.js - Cliente HTTP con protecciones',
+                    urlBuilt.includes('/webhook') && typeof fetchData === 'function',
+                    `buildEndpointUrl(): ${urlBuilt}\ngetTimeoutForEndpoint(): ${timeout}ms\nProtecciones: Rate Limiting (${API_CONFIG.rateLimit.enabled}), Circuit Breaker (${API_CONFIG.circuitBreaker.enabled}), Retry (${API_CONFIG.retry.enabled}), Cache (${API_CONFIG.cache.enabled})`
+                );
+                if (urlBuilt.includes('/webhook')) testsPassed++;
+                updateProgress(6, testsTotal);
+            } catch (error) {
+                addTest('api.js - Cliente HTTP con protecciones', false, error.message);
+                updateProgress(6, testsTotal);
+            }
+
+            // Test 7: data-normalizer.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { normalizeDatos, normalizeEstudiante, normalizeField, calcularContadorDesdePreguntas } = await import('@modules/data-normalizer.js');
+
+                const testEstudiante = normalizeEstudiante({ Nombre: 'Test', Chat_id: '123' });
+                const normalized = normalizeDatos({ estudiantes: [{ name: 'Test', chat_id: '123' }] });
+                const contador = calcularContadorDesdePreguntas([{ Chat_id: '123', Nombre: 'Test' }]);
+
+                addTest(
+                    'data-normalizer.js - Normalización de datos',
+                    testEstudiante.Nombre === 'Test' && normalized.estudiantes.length === 1,
+                    `normalizeEstudiante(): Nombre=${testEstudiante.Nombre}\nnormalizeDatos(): ${normalized.estudiantes.length} estudiantes\ncalcularContadorDesdePreguntas(): ${contador.length} contador`
+                );
+                if (testEstudiante.Nombre === 'Test') testsPassed++;
+                updateProgress(7, testsTotal);
+            } catch (error) {
+                addTest('data-normalizer.js - Normalización de datos', false, error.message);
+                updateProgress(7, testsTotal);
+            }
+
+            // Test 8: data-loader.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { cargarCursos, cargarTodosDatos, cargarDatosEjemplo, obtenerEstadisticasCache } = await import('@modules/data-loader.js');
+
+                addTest(
+                    'data-loader.js - Carga de datos con cache',
+                    typeof cargarCursos === 'function' && typeof cargarTodosDatos === 'function',
+                    `cargarCursos(): ${typeof cargarCursos}\ncargarTodosDatos(): ${typeof cargarTodosDatos}\ncargarDatosEjemplo(): ${typeof cargarDatosEjemplo}\nobtenerEstadisticasCache(): ${typeof obtenerEstadisticasCache}`
+                );
+                if (typeof cargarCursos === 'function') testsPassed++;
+                updateProgress(8, testsTotal);
+            } catch (error) {
+                addTest('data-loader.js - Carga de datos con cache', false, error.message);
+                updateProgress(8, testsTotal);
+            }
+
             // Resumen final
             await new Promise(r => setTimeout(r, 500));
             const allPassed = testsPassed === testsTotal;
@@ -229,7 +289,6 @@
                 }
                 <h3>Próximos pasos:</h3>
                 <ul>
-                    <li><strong>Fase 3:</strong> Crear módulos de datos (api.js, data-normalizer.js, data-loader.js)</li>
                     <li><strong>Fase 4:</strong> Crear módulos de UI (navigation.js, table-renderer.js, charts.js, metrics.js)</li>
                     <li><strong>Fase 5:</strong> Crear módulos complejos (calendar.js, events.js)</li>
                     <li><strong>Fase 6:</strong> Integración final y testing completo</li>

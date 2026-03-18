@@ -361,6 +361,80 @@ function init() {
     return validacion;
 }
 
+// ============================================
+// FUNCIONES DE UI (Loading, Toasts)
+// ============================================
+
+/**
+ * Muestra el overlay de loading
+ * @param {boolean} show - True para mostrar, false para ocultar
+ * @param {string} mensaje - Mensaje a mostrar
+ */
+function mostrarLoading(show = true, mensaje = 'Cargando...') {
+    if (!DOM.loadingOverlay) return;
+
+    if (show) {
+        DOM.loadingOverlay.classList.remove('hidden');
+
+        // Actualizar mensaje si se proporciona
+        const loadingText = DOM.loadingOverlay.querySelector('p');
+        if (loadingText && mensaje) {
+            loadingText.textContent = mensaje;
+        }
+    } else {
+        DOM.loadingOverlay.classList.add('hidden');
+    }
+}
+
+/**
+ * Oculta el overlay de loading
+ */
+function ocultarLoading() {
+    mostrarLoading(false);
+}
+
+/**
+ * Muestra una notificación toast
+ * @param {string} mensaje - Mensaje a mostrar
+ * @param {string} tipo - Tipo de toast ('success', 'error', 'info', 'warning')
+ */
+function mostrarToast(mensaje, tipo = 'info') {
+    if (!DOM.toastContainer) return;
+
+    // Crear elemento del toast
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${tipo}`;
+
+    // Icono según tipo
+    const iconos = {
+        success: '<i class="fas fa-check-circle"></i>',
+        error: '<i class="fas fa-exclamation-circle"></i>',
+        warning: '<i class="fas fa-exclamation-triangle"></i>',
+        info: '<i class="fas fa-info-circle"></i>'
+    };
+
+    toast.innerHTML = `
+        ${iconos[tipo] || ''}
+        <span>${mensaje}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    // Agregar al container
+    DOM.toastContainer.appendChild(toast);
+
+    // Auto-eliminar después de 3 segundos
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('toast-hiding');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+
+    console.log(`🔔 Toast ${tipo}: ${mensaje}`);
+}
+
 // Exportar el cache DOM y funciones helper
 export {
     DOM,
@@ -384,5 +458,8 @@ export {
     off,
     disable,
     enable,
-    validarDOM
+    validarDOM,
+    mostrarLoading,
+    ocultarLoading,
+    mostrarToast
 };

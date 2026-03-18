@@ -18,12 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             { CONFIG, isLocalhost } = await import('@modules/config.js'),
             { initState } = await import('@modules/state.js'),
             { dom, init: initDOM } = await import('@modules/dom.js'),
-            { setNivelLog, info: logInfo, success: logSuccess, error: logError } = await import('@modules/diagnostics.js')
+            { setNivelLog, info: logInfo, success: logSuccess, error: logError } = await import('@modules/diagnostics.js'),
+            { cargarCursos } = await import('@modules/data-loader.js')
         ] = await Promise.all([
             import('@modules/config.js'),
             import('@modules/state.js'),
             import('@modules/dom.js'),
-            import('@modules/diagnostics.js')
+            import('@modules/diagnostics.js'),
+            import('@modules/data-loader.js')
         ]);
 
         console.log('✅ Módulos core cargados');
@@ -73,9 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // CARGAR DATOS INICIALES
         // ============================================
         console.log('📚 Cargando datos iniciales...');
-        // NOTA: Este módulo aún no existe, se creará en Fase 3
-        // const { dataLoader } = await import('@modules/data-loader.js');
-        // await dataLoader.cargarCursos();
+        await cargarCursos();
 
         // ============================================
         // INICIALIZAR CALENDARIO
@@ -257,3 +257,80 @@ document.addEventListener('DOMContentLoaded', async () => {
         body.appendChild(errorOverlay);
     }
 });
+
+// ============================================
+// NAVEGACIÓN SIMPLE (temporal hasta navigation.js)
+// ============================================
+
+/**
+ * Navega al dashboard de un curso
+ * @param {string} cursoId - ID del curso
+ * @param {string} cursoNombre - Nombre del curso
+ */
+window.irADashboard = async function(cursoId, cursoNombre) {
+    try {
+        console.log(`🎯 Navegando a dashboard: ${cursoNombre} (${cursoId})`);
+
+        // Importar módulos necesarios
+        const { setCursoActual } = await import('@modules/state.js');
+        const { getCursoActual } = await import('@modules/state.js');
+        const { DOM } = await import('@modules/dom.js');
+        const { dom } = await import('@modules/dom.js');
+
+        // Establecer curso actual
+        setCursoActual(cursoId, cursoNombre);
+
+        // Ocultar home y mostrar dashboard
+        if (DOM.homeContainer && DOM.dashboardContainer) {
+            DOM.homeContainer.classList.add('hidden');
+            DOM.dashboardContainer.classList.remove('hidden');
+        }
+
+        // Actualizar título
+        if (DOM.cursoTitulo) {
+            DOM.cursoTitulo.textContent = cursoNombre;
+        }
+
+        // Actualizar selector de cursos
+        if (DOM.cursoSelect) {
+            DOM.cursoSelect.value = cursoId;
+        }
+
+        // Cargar datos del dashboard
+        const { cargarTodosDatos } = await import('@modules/data-loader.js');
+        await cargarTodosDatos();
+
+        console.log(`✅ Dashboard cargado: ${cursoNombre}`);
+
+    } catch (error) {
+        console.error('❌ Error navegando al dashboard:', error);
+    }
+};
+
+/**
+ * Navega a la página de inicio
+ */
+window.irAInicio = async function() {
+    try {
+        console.log('🏠 Navegando a inicio...');
+
+        const { limpiarDatos } = await import('@modules/state.js');
+        const { setCursoActual } = await import('@modules/state.js');
+        const { DOM } = await import('@modules/dom.js');
+
+        // Limpiar curso actual
+        setCursoActual(null, null);
+        limpiarDatos();
+
+        // Mostrar home y ocultar dashboard
+        if (DOM.homeContainer && DOM.dashboardContainer) {
+            DOM.homeContainer.classList.remove('hidden');
+            DOM.dashboardContainer.classList.add('hidden');
+        }
+
+        console.log('✅ De vuelta al inicio');
+
+    } catch (error) {
+        console.error('❌ Error navegando a inicio:', error);
+    }
+};
