@@ -6,7 +6,7 @@
 // Complejidad: ⭐⭐ Media
 // Dependencias: state.js, dom.js, utils.js, diagnostics.js
 
-import { getDatos, getTabActual, getBusqueda, getPagina } from '@modules/state.js';
+import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
 import { formatearFecha, calcularPorcentaje, paginar } from '@modules/utils.js';
 import { info, warn, error } from '@modules/diagnostics.js';
@@ -21,7 +21,7 @@ import { info, warn, error } from '@modules/diagnostics.js';
 function renderizarEstudiantes() {
     try {
         const estudiantes = getDatos('estudiantes') || [];
-        const busqueda = getBusqueda();
+        const busqueda = getTerminoBusqueda();
 
         // Filtrar por búsqueda
         const filtrados = estudiantes.filter(est => {
@@ -83,7 +83,7 @@ function renderizarEstudiantes() {
 function renderizarPreguntas() {
     try {
         const preguntas = getDatos('preguntas') || [];
-        const busqueda = getBusqueda();
+        const busqueda = getTerminoBusqueda();
 
         // Filtrar por búsqueda
         let filtrados = preguntas.filter(p => {
@@ -174,7 +174,7 @@ function extraerTimestamp(preg) {
 function renderizarActivos() {
     try {
         const contador = getDatos('contador') || [];
-        const busqueda = getBusqueda();
+        const busqueda = getTerminoBusqueda();
 
         // Filtrar y ordenar
         let filtrados = contador
@@ -198,7 +198,7 @@ function renderizarActivos() {
         }
 
         // Paginar
-        const pagina = getPagina();
+        const pagina = getPaginaActual();
         const itemsPerPage = 10;
         const inicio = (pagina - 1) * itemsPerPage;
         const fin = inicio + itemsPerPage;
@@ -248,7 +248,7 @@ function renderizarActivos() {
 function renderizarTemas() {
     try {
         const temas = getDatos('temas') || [];
-        const busqueda = getBusqueda();
+        const busqueda = getTerminoBusqueda();
 
         // Agrupar temas únicos por estudiante
         const temasAgrupados = {};
@@ -300,7 +300,7 @@ function renderizarTemas() {
         }
 
         // Paginar
-        const pagina = getPagina();
+        const pagina = getPaginaActual();
         const itemsPerPage = 10;
         const inicio = (pagina - 1) * itemsPerPage;
         const fin = inicio + itemsPerPage;
