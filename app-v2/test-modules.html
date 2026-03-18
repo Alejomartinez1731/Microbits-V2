@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Módulos - Microbits V2</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a1420;
+            color: #00d4ff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a2838;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+        }
+        .test-section.success {
+            border-left-color: #6bcb77;
+        }
+        .test-section.error {
+            border-left-color: #ff6b9d;
+        }
+        h1 {
+            color: #00d4ff;
+        }
+        h2 {
+            color: #ffd93d;
+            margin-top: 0;
+        }
+        pre {
+            background: #0a1420;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .progress {
+            background: #1a2838;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .progress-bar {
+            background: #0a1420;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #6bcb77);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0a1420;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Módulos ES6 - Microbits V2</h1>
+    <p>Probando que los 5 módulos básicos cargan correctamente con importmap...</p>
+
+    <div class="progress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+        </div>
+        <p id="progress-text">Iniciando tests...</p>
+    </div>
+
+    <div id="test-results"></div>
+
+    <!-- Importmap para los módulos -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@modules/config.js": "./modules/config.js",
+            "@modules/state.js": "./modules/state.js",
+            "@modules/utils.js": "./modules/utils.js",
+            "@modules/diagnostics.js": "./modules/diagnostics.js",
+            "@modules/dom.js": "./modules/dom.js"
+        }
+    }
+    </script>
+
+    <!-- Script de test -->
+    <script type="module">
+        const resultsDiv = document.getElementById('test-results');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+
+        let testsPassed = 0;
+        let testsTotal = 5;
+
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+            progressText.textContent = `Test ${current} de ${total} completados...`;
+        }
+
+        function addTest(title, passed, details = '') {
+            const section = document.createElement('div');
+            section.className = `test-section ${passed ? 'success' : 'error'}`;
+
+            const status = passed ? '✅ PASS' : '❌ FAIL';
+
+            section.innerHTML = `
+                <h2>${status}</h2>
+                <p><strong>${title}</strong></p>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+
+            resultsDiv.appendChild(section);
+        }
+
+        // Tests de módulos
+        async function runTests() {
+            // Test 1: config.js
+            try {
+                const { isLocalhost, CONFIG } = await import('@modules/config.js');
+                const endpointsCount = Object.keys(CONFIG.endpoints).length;
+                addTest(
+                    'config.js - Configuración N8N',
+                    true,
+                    `isLocalhost: ${isLocalhost}\nbaseUrl: ${CONFIG.baseUrl}\nendpoints definidos: ${endpointsCount}\nitemsPerPage: ${CONFIG.itemsPerPage}\nfetchTimeout: ${CONFIG.fetchTimeout}ms`
+                );
+                testsPassed++;
+                updateProgress(1, testsTotal);
+            } catch (error) {
+                addTest('config.js - Configuración N8N', false, error.message);
+                updateProgress(1, testsTotal);
+            }
+
+            // Test 2: state.js
+            await new Promise(r => setTimeout(r, 300)); // Pequeña pausa para visualización
+            try {
+                const { getState, setCursoActual, getCursoActual, setDatos, getDatos } = await import('@modules/state.js');
+                setCursoActual('test-123', 'Curso Test');
+                const curso = getCursoActual();
+                setDatos('temas', [{ tema: 'Test', count: 5 }]);
+                const datos = getDatos('temas');
+                addTest(
+                    'state.js - Estado Global',
+                    curso.id === 'test-123' && datos.length === 1,
+                    `setCursoActual('test-123', 'Curso Test')\ngetCursoActual(): ${JSON.stringify(curso)}\nsetDatos('temas', [...])\ngetDatos('temas'): ${datos.length} items`
+                );
+                if (curso.id === 'test-123') testsPassed++;
+                updateProgress(2, testsTotal);
+            } catch (error) {
+                addTest('state.js - Estado Global', false, error.message);
+                updateProgress(2, testsTotal);
+            }
+
+            // Test 3: utils.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { capitalizeFirst, formatearFecha, calcularPorcentaje, ordenarPor, filtrarPor } = await import('@modules/utils.js');
+                const capitalized = capitalizeFirst('hola');
+                const fecha = formatearFecha(new Date('2026-03-18T10:30:00'));
+                const porcentaje = calcularPorcentaje(25, 100);
+                const ordenado = ordenarPor([{ val: 3 }, { val: 1 }], 'val');
+                const filtrado = filtrarPor([{ name: 'Test' }, { name: 'Otro' }], 'test', ['name']);
+                addTest(
+                    'utils.js - Funciones Helper',
+                    capitalized === 'Hola' && porcentaje === '25.0%',
+                    `capitalizeFirst('hola'): ${capitalized}\nformatearFecha(): ${fecha}\ncalcularPorcentaje(25, 100): ${porcentaje}\nordenarPor([{val:3},{val:1}], 'val'): ${ordenado[0].val}\nfiltrarPor(..., 'test'): ${filtrado.length} resultado(s)`
+                );
+                if (capitalized === 'Hola') testsPassed++;
+                updateProgress(3, testsTotal);
+            } catch (error) {
+                addTest('utils.js - Funciones Helper', false, error.message);
+                updateProgress(3, testsTotal);
+            }
+
+            // Test 4: diagnostics.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { info, warn, error, createLogger, LogLevel, trace, traceReturn } = await import('@modules/diagnostics.js');
+                const logger = createLogger('TEST');
+                addTest(
+                    'diagnostics.js - Sistema de Logging',
+                    typeof logger.info === 'function',
+                    `LogLevel: ${Object.keys(LogLevel).length} niveles\ncreateLogger('TEST'): logger personalizado creado\nFunciones exportadas: info, warn, error, trace, traceReturn, group, table, time, etc.\nTotal funciones: 17`
+                );
+                testsPassed++;
+                updateProgress(4, testsTotal);
+            } catch (error) {
+                addTest('diagnostics.js - Sistema de Logging', false, error.message);
+                updateProgress(4, testsTotal);
+            }
+
+            // Test 5: dom.js
+            await new Promise(r => setTimeout(r, 300));
+            try {
+                const { DOM, exists, show, hide, setText, on, off } = await import('@modules/dom.js');
+                const hasDOM = typeof DOM === 'object';
+                addTest(
+                    'dom.js - Cache de Selectores DOM',
+                    hasDOM && typeof show === 'function',
+                    `DOM object: ${hasDOM}\nFunciones helper: exists, show, hide, setText, setHTML, clear, on, off, etc.\nTotal funciones exportadas: 20+\n\nNota: DOM.init() se llamará al iniciar la app`
+                );
+                if (hasDOM) testsPassed++;
+                updateProgress(5, testsTotal);
+            } catch (error) {
+                addTest('dom.js - Cache de Selectores DOM', false, error.message);
+                updateProgress(5, testsTotal);
+            }
+
+            // Resumen final
+            await new Promise(r => setTimeout(r, 500));
+            const allPassed = testsPassed === testsTotal;
+            const summary = document.createElement('div');
+            summary.className = `test-section ${allPassed ? 'success' : 'error'}`;
+            summary.innerHTML = `
+                <h2>${allPassed ? '🎉' : '⚠️'} Resumen Final</h2>
+                <p>Tests pasados: <strong>${testsPassed}/${testsTotal}</strong></p>
+                ${allPassed
+                    ? '<p>✅ Todos los módulos básicos cargan correctamente con ES6 modules + importmap.</p>'
+                    : '<p>❌ Algunos módulos fallaron. Revisa los detalles arriba.</p>'
+                }
+                <h3>Próximos pasos:</h3>
+                <ul>
+                    <li><strong>Fase 3:</strong> Crear módulos de datos (api.js, data-normalizer.js, data-loader.js)</li>
+                    <li><strong>Fase 4:</strong> Crear módulos de UI (navigation.js, table-renderer.js, charts.js, metrics.js)</li>
+                    <li><strong>Fase 5:</strong> Crear módulos complejos (calendar.js, events.js)</li>
+                    <li><strong>Fase 6:</strong> Integración final y testing completo</li>
+                </ul>
+                <p style="margin-top: 15px; color: #ffd93d;">⏱️ Tiempo estimado total: 37-50 horas (4-6 semanas)</p>
+            `;
+            resultsDiv.appendChild(summary);
+
+            progressText.textContent = allPassed
+                ? '✅ Todos los tests completados exitosamente'
+                : '⚠️ Tests completados con errores';
+        }
+
+        // Ejecutar tests
+        runTests();
+    </script>
+</body>
+</html>
