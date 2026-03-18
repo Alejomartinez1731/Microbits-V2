@@ -19,7 +19,7 @@ import { info, warn, error } from '@modules/diagnostics.js';
  * Calcula todas las métricas del dashboard
  * @returns {Object} Objeto con todas las métricas calculadas
  */
-export function calcularMetricas() {
+function calcularMetricas() {
     try {
         const contador = getDatos('contador') || [];
         const temas = getDatos('temas') || [];
@@ -100,7 +100,7 @@ export function calcularMetricas() {
 /**
  * Actualiza todas las métricas en el DOM
  */
-export function actualizarMetricas() {
+function actualizarMetricas() {
     try {
         info('🔄 Actualizando métricas...');
 
@@ -191,7 +191,7 @@ function actualizarDetalles(metricas) {
 /**
  * Inicializa los event listeners de las tarjetas de métricas
  */
-export function inicializarMetricasInteractivas() {
+function inicializarMetricasInteractivas() {
     try {
         info('🔄 Inicializando métricas interactivas');
 
