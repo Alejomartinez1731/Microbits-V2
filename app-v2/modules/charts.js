@@ -44,7 +44,7 @@ const chartColors = {
 /**
  * Inicializa la configuración global de Chart.js
  */
-export function inicializarConfiguracionGlobal() {
+function inicializarConfiguracionGlobal() {
     if (typeof Chart === 'undefined') {
         warn('⚠️ Chart.js no está cargado');
         return;
@@ -65,7 +65,7 @@ export function inicializarConfiguracionGlobal() {
  * Inicializa el gráfico de temas más consultados
  * @param {Array} temas - Array de temas con propiedad {tema, count}
  */
-export function inicializarGraficoTemas(temas) {
+function inicializarGraficoTemas(temas) {
     try {
         const ctx = document.getElementById('chart-temas');
         if (!ctx) {
@@ -184,7 +184,7 @@ export function inicializarGraficoTemas(temas) {
  * Inicializa el gráfico de estudiantes más activos
  * @param {Array} estudiantes - Array de estudiantes con propiedad {Nombre, Contador}
  */
-export function inicializarGraficoActivos(estudiantes) {
+function inicializarGraficoActivos(estudiantes) {
     try {
         const ctx = document.getElementById('chart-activos');
         if (!ctx) {
@@ -310,7 +310,7 @@ export function inicializarGraficoActivos(estudiantes) {
  * Actualiza todos los gráficos con nuevos datos
  * @param {Object} datos - Objeto con {temas, contador}
  */
-export function actualizarGraficos(datos) {
+function actualizarGraficos(datos) {
     try {
         const temas = datos.temas || [];
         const contador = datos.contador || [];
@@ -335,7 +335,7 @@ export function actualizarGraficos(datos) {
 /**
  * Destruye todos los gráficos
  */
-export function destruirGraficos() {
+function destruirGraficos() {
     try {
         if (chartTemas) {
             chartTemas.destroy();
