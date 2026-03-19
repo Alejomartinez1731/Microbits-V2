@@ -277,6 +277,20 @@ body::before {
     color: var(--text-gray);
 }
 
+/* Home Content Grid - Layout horizontal */
+.home-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 28px;
+    margin-top: 28px;
+}
+
+@media (max-width: 1024px) {
+    .home-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Courses Section */
 .courses-section {
     background: var(--bg-glass);
@@ -515,6 +529,28 @@ body::before {
     border-color: var(--neon-blue);
     box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
     font-weight: 700;
+}
+
+.calendar-day.holiday {
+    background: rgba(255, 107, 157, 0.15) !important;
+    border-color: rgba(255, 107, 157, 0.5) !important;
+    color: var(--neon-pink) !important;
+    font-weight: 600;
+}
+
+.calendar-day.holiday .day-number {
+    color: var(--neon-pink);
+}
+
+.festivo-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: var(--neon-pink);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--neon-pink);
 }
 
 .calendar-day.other-month {

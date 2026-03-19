@@ -40,6 +40,130 @@ const MESES = [
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 // ============================================
+// FESTIVOS - España, Cataluña y Reus
+// ============================================
+
+/**
+ * Lista de festivos nacionales, autonómicos y locales
+ * Formato: { mes: 0-11, dia: 1-31, nombre: string, tipo: string }
+ */
+const FESTIVOS = [
+    // ===== FESTIVOS NACIONALES DE ESPAÑA =====
+    { mes: 0, dia: 1, nombre: 'Año Nuevo', tipo: 'nacional' },
+    { mes: 0, dia: 6, nombre: 'Epifanía del Señor', tipo: 'nacional' },
+    { mes: 2, dia: 28, nombre: 'Día de la Castilla-La Mancha', tipo: 'regional' }, // Solo CLM
+    { mes: 4, dia: 1, nombre: 'Fiesta del Trabajo', tipo: 'nacional' },
+    { mes: 7, dia: 15, nombre: 'Asunción de la Virgen', tipo: 'nacional' },
+    { mes: 9, dia: 12, nombre: 'Fiesta Nacional de España', tipo: 'nacional' },
+    { mes: 10, dia: 1, nombre: 'Todos los Santos', tipo: 'nacional' },
+    { mes: 10, dia: 6, nombre: 'Día de la Constitución', tipo: 'nacional' },
+    { mes: 11, dia: 8, nombre: 'Inmaculada Concepción', tipo: 'nacional' },
+    { mes: 11, dia: 25, nombre: 'Natividad del Señor', tipo: 'nacional' },
+
+    // ===== FESTIVOS DE CATALUÑA =====
+    { mes: 1, dia: 12, nombre: 'Santa Eulàlia', tipo: 'cataluna' }, // Barcelona
+    { mes: 5, dia: 24, nombre: 'Sant Joan', tipo: 'cataluna' },
+    { mes: 8, dia: 11, nombre: 'Diada de Catalunya', tipo: 'cataluna' },
+    { mes: 8, dia: 24, nombre: 'La Mercè', tipo: 'cataluna' }, // Barcelona
+    { mes: 11, dia: 26, nombre: 'Sant Esteve', tipo: 'cataluna' },
+
+    // ===== FESTIVOS DE REUS =====
+    { mes: 6, dia: 25, nombre: 'Sant Jaume', tipo: 'reus' }, // Patrón de Reus
+    { mes: 8, dia: 28, nombre: 'Festa Major de Reus', tipo: 'reus' }, // Fiesta Mayor de Reus
+    { mes: 8, dia: 29, nombre: 'Festa Major de Reus', tipo: 'reus' }, // Fiesta Mayor de Reus (2 días)
+];
+
+/**
+ * Calcula la fecha de Semana Santa y otros festivos variables
+ * @param {number} año - Año para calcular
+ * @returns {Array} Array de festivos variables { mes, dia, nombre, tipo }
+ */
+function calcularFestivosVariables(año) {
+    const festivos = [];
+
+    // Semana Santa (cálculo basado en el equinoccio de primavera)
+    // Domingo de Resurrección = Primer domingo después de la luna llena
+    // siguiente al equinoccio de primavera (20/21 de marzo)
+
+    // Aproximación simplificada para Semana Santa
+    const getEasterDate = (year) => {
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+        return new Date(year, month - 1, day);
+    };
+
+    const domingoPascua = getEasterDate(año);
+
+    // Jueves Santo (3 días antes del Domingo de Pascua)
+    const juevesSanto = new Date(domingoPascua);
+    juevesSanto.setDate(domingoPascua.getDate() - 3);
+    festivos.push({
+        mes: juevesSanto.getMonth(),
+        dia: juevesSanto.getDate(),
+        nombre: 'Jueves Santo',
+        tipo: 'nacional'
+    });
+
+    // Viernes Santo (2 días antes del Domingo de Pascua)
+    const viernesSanto = new Date(domingoPascua);
+    viernesSanto.setDate(domingoPascua.getDate() - 2);
+    festivos.push({
+        mes: viernesSanto.getMonth(),
+        dia: viernesSanto.getDate(),
+        nombre: 'Viernes Santo',
+        tipo: 'nacional'
+    });
+
+    // Lunes de Pascua (1 día después del Domingo de Pascua)
+    const lunesPascua = new Date(domingoPascua);
+    lunesPascua.setDate(domingoPascua.getDate() + 1);
+    festivos.push({
+        mes: lunesPascua.getMonth(),
+        dia: lunesPascua.getDate(),
+        nombre: 'Lunes de Pascua',
+        tipo: 'cataluna'
+    });
+
+    return festivos;
+}
+
+/**
+ * Verifica si una fecha es festivo
+ * @param {Date} fecha - Fecha a verificar
+ * @returns {Object|null} Objeto del festivo o null si no es festivo
+ */
+function esFestivo(fecha) {
+    const mes = fecha.getMonth();
+    const dia = fecha.getDate();
+    const año = fecha.getFullYear();
+
+    // Buscar en festivos fijos
+    const festivoFijo = FESTIVOS.find(f => f.mes === mes && f.dia === dia);
+    if (festivoFijo) return festivoFijo;
+
+    // Buscar en festivos variables
+    const festivosVariables = calcularFestivosVariables(año);
+    const festivoVariable = festivosVariables.find(f => f.mes === mes && f.dia === dia);
+    if (festivoVariable) return festivoVariable;
+
+    return null;
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 
@@ -222,10 +346,12 @@ function generarDiasMes() {
 
         const tieneEventos = eventosDelDia.length > 0;
         const esHoy = esDiaHoy(fecha);
+        const festivo = esFestivo(fecha);
 
         let clases = 'calendar-day';
         if (esHoy) clases += ' today';
         if (tieneEventos) clases += ' has-events';
+        if (festivo) clases += ' holiday';
 
         let eventosBadges = '';
         if (tieneEventos) {
@@ -236,10 +362,17 @@ function generarDiasMes() {
             eventosBadges += '</div>';
         }
 
+        // Indicador de festivo
+        let festivoBadge = '';
+        if (festivo && !tieneEventos) {
+            festivoBadge = `<div class="festivo-indicator" title="${festivo.nombre}"></div>`;
+        }
+
         html += `
-            <div class="${clases}" data-fecha="${fechaStr}">
+            <div class="${clases}" data-fecha="${fechaStr}" ${festivo ? `title="${festivo.nombre} - ${festivo.tipo}"` : ''}>
                 <span class="day-number">${dia}</span>
                 ${eventosBadges}
+                ${festivoBadge}
             </div>
         `;
     }

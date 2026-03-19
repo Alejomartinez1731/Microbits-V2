@@ -67,25 +67,27 @@
             </div>
         </section>
 
-        <!-- Sección de Cursos -->
-        <section class="courses-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-graduation-cap"></i>
-                    Cursos Disponibles
-                </h3>
-                <p class="section-subtitle">Cargando cursos...</p>
-            </div>
-            <div class="courses-list" id="courses-list">
-                <div class="courses-loading">
-                    <div class="spinner"></div>
-                    <p>Cargando cursos...</p>
+        <!-- Contenedor Grid para Cursos y Calendario -->
+        <div class="home-content-grid">
+            <!-- Sección de Cursos -->
+            <section class="courses-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        Cursos Disponibles
+                    </h3>
+                    <p class="section-subtitle">Cargando cursos...</p>
                 </div>
-            </div>
-        </section>
+                <div class="courses-list" id="courses-list">
+                    <div class="courses-loading">
+                        <div class="spinner"></div>
+                        <p>Cargando cursos...</p>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Sección de Calendario -->
-        <section class="calendar-section">
+            <!-- Sección de Calendario -->
+            <section class="calendar-section">
             <div class="section-header">
                 <h3 class="section-title">
                     <i class="fas fa-calendar-days"></i>
@@ -140,6 +142,7 @@
                 </div>
             </div>
         </section>
+        </div><!-- Fin home-content-grid -->
     </div>
 
     <!-- Dashboard Container (oculto inicialmente) -->
@@ -436,6 +439,6 @@
     </script>
 
     <!-- 🚀 MAIN ENTRY POINT -->
-    <script type="module" src="./main.js?v=34"></script>
+    <script type="module" src="./main.js?v=35"></script>
 </body>
 </html>
