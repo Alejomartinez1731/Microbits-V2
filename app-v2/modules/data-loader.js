@@ -123,6 +123,9 @@ async function cargarCursos() {
         // Actualizar selector de cursos en el dashboard
         actualizarSelectorCursos();
 
+        // Actualizar contadores de estudiantes de todos los cursos
+        await actualizarContadoresDeCursos();
+
         success(`✅ Cursos cargados: ${cursosNormalizados.length} cursos`);
         return true;
 
@@ -201,6 +204,67 @@ async function renderizarCursos(cursos) {
     });
 
     info('✅ Cursos renderizados');
+}
+
+/**
+ * Actualiza los contadores de estudiantes de todos los cursos
+ * Esta función carga los estudiantes de cada curso en paralelo
+ * y actualiza el contador en la lista de cursos
+ */
+async function actualizarContadoresDeCursos() {
+    try {
+        info('📊 Actualizando contadores de estudiantes de todos los cursos...');
+
+        const cursos = getCursos();
+        if (!cursos || cursos.length === 0) {
+            warn('⚠️ No hay cursos para actualizar contadores');
+            return;
+        }
+
+        // Cargar estudiantes de cada curso en paralelo
+        const promesas = cursos.map(async (curso) => {
+            try {
+                const estudiantes = await fetchDataWithRetry('estudiantes', {
+                    params: { curso: curso.id },
+                    useCache: true,
+                    useRetry: true
+                });
+
+                if (estudiantes && Array.isArray(estudiantes)) {
+                    const estudiantesValidos = filterValidEstudiantes(estudiantes);
+                    info(`📊 ${curso.nombre}: ${estudiantesValidos.length} estudiantes`);
+
+                    // Actualizar contador en el estado
+                    actualizarCursoContador(curso.id, estudiantesValidos.length);
+
+                    return {
+                        cursoId: curso.id,
+                        contador: estudiantesValidos.length
+                    };
+                }
+            } catch (err) {
+                warn(`⚠️ Error cargando estudiantes para ${curso.nombre}:`, err.message);
+                return null;
+            }
+        });
+
+        // Esperar a que todas las promesas se resuelvan
+        const resultados = await Promise.allSettled(promesas);
+
+        // Contar cuántos se actualizaron correctamente
+        const actualizados = resultados.filter(r => r.status === 'fulfilled' && r.value).length;
+
+        success(`✅ Contadores actualizados: ${actualizados}/${cursos.length} cursos`);
+
+        // Re-renderizar cursos con los contadores actualizados
+        const cursosActualizados = getCursos();
+        if (cursosActualizados && cursosActualizados.length > 0) {
+            await renderizarCursos(cursosActualizados);
+        }
+
+    } catch (err) {
+        error('Error actualizando contadores de cursos:', err);
+    }
 }
 
 // ============================================
