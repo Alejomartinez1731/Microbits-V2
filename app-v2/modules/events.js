@@ -15,7 +15,8 @@ import {
 } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
 import { mostrarToast } from '@modules/dom.js';
-import { info, warn, error } from '@modules/diagnostics.js';
+import { info, warn, error, success } from '@modules/diagnostics.js';
+import { fetchDataWithRetry } from '@modules/api.js';
 
 // ============================================
 // CONSTANTES
@@ -36,42 +37,119 @@ const TIPOS_EVENTO = {
 // ============================================
 
 /**
- * Carga los eventos desde localStorage
+ * Carga los eventos desde N8N (Google Sheets)
  * @returns {Promise<boolean>} True si se cargaron correctamente
  */
 async function cargarEventos() {
     try {
-        info('📂 Cargando eventos desde localStorage...');
+        info('📅 Cargando eventos desde N8N/Google Sheets...');
 
-        const eventosGuardados = localStorage.getItem(STORAGE_KEY);
+        // Cargar eventos desde N8N
+        const rawData = await fetchDataWithRetry('eventosListar', {
+            useCache: true,
+            useRetry: true
+        });
 
-        if (!eventosGuardados) {
-            info('📂 No hay eventos guardados, usando eventos por defecto');
-            // Crear eventos de ejemplo
-            const eventosPorDefecto = crearEventosPorDefecto();
-            setEventos(eventosPorDefecto);
-            guardarEventosEnStorage(eventosPorDefecto);
+        if (!rawData) {
+            warn('⚠️ No se recibieron eventos desde N8N');
+            setEventos([]);
+            return false;
+        }
+
+        // Validar que sea un array
+        if (!Array.isArray(rawData)) {
+            // Intentar extraer array de objeto
+            if (typeof rawData === 'object' && rawData !== null) {
+                const posiblesArrays = Object.values(rawData).filter(v => Array.isArray(v));
+                if (posiblesArrays.length > 0) {
+                    info('✅ Array encontrado en objeto, usándolo');
+                    procesarEventosDesdeN8N(posiblesArrays[0]);
+                    return true;
+                }
+            }
+            throw new Error(`La respuesta no es un array: ${typeof rawData}`);
+        }
+
+        if (rawData.length === 0) {
+            info('📭 No hay eventos en el Google Sheet');
+            setEventos([]);
             return true;
         }
 
-        const eventos = JSON.parse(eventosGuardados);
-
-        // Validar que sea un array
-        if (!Array.isArray(eventos)) {
-            throw new Error('Los eventos guardados no son un array');
-        }
-
-        setEventos(eventos);
-        info(`✅ ${eventos.length} eventos cargados`);
+        // Procesar eventos desde N8N
+        procesarEventosDesdeN8N(rawData);
         return true;
 
     } catch (err) {
-        error('❌ Error cargando eventos:', err);
-        // Usar eventos por defecto en caso de error
-        const eventosPorDefecto = crearEventosPorDefecto();
-        setEventos(eventosPorDefecto);
+        error('❌ Error cargando eventos desde N8N:', err);
+        // En caso de error, no usar localStorage para no mostrar datos obsoletos
+        setEventos([]);
         return false;
     }
+}
+
+/**
+ * Procesa eventos crudos desde N8N y los normaliza
+ * @param {Array} rawData - Eventos crudos desde N8N
+ */
+function procesarEventosDesdeN8N(rawData) {
+    info(`📊 Procesando ${rawData.length} eventos desde N8N...`);
+
+    // Mostrar columnas disponibles para debugging
+    if (rawData.length > 0) {
+        info('📋 Columnas disponibles:', Object.keys(rawData[0]));
+    }
+
+    // Transformar datos del formato de N8N al formato interno
+    const eventos = rawData
+        .filter(row => {
+            // Verificar que tenga fecha y que no esté vacía
+            const fecha = row['Fecha'] || row['fecha'] || '';
+            const tieneFecha = fecha && fecha.trim() !== '';
+            if (!tieneFecha) {
+                warn('⚠️ Evento sin fecha:', row);
+            }
+            return tieneFecha;
+        })
+        .map(row => {
+            // Normalizar fecha - eliminar hora si viene con formato ISO
+            let fechaNormalizada = (row['Fecha'] || row['fecha'] || '').trim();
+            if (fechaNormalizada.includes('T')) {
+                fechaNormalizada = fechaNormalizada.split('T')[0];
+            }
+
+            // Normalizar ID - puede venir como número o string
+            const id = row['ID'] || row['id'] || Date.now().toString() + Math.random();
+
+            // Normalizar tipo
+            let tipo = (row['Tipo'] || row['tipo'] || 'other').trim().toLowerCase();
+            // Mapear tipos si vienen en español
+            const tipoMap = {
+                'examen': 'exam',
+                'práctica': 'practice',
+                'practice': 'practice',
+                'reunión': 'meeting',
+                'meeting': 'meeting',
+                'festividad': 'holiday',
+                'holiday': 'holiday',
+                'otro': 'other'
+            };
+            tipo = tipoMap[tipo] || tipo;
+
+            return {
+                id: String(id),
+                titulo: (row['Titulo del evento '] || row['Titulo'] || row['titulo'] || row['Título'] || 'Sin título').trim(),
+                fecha: fechaNormalizada,
+                tipo: tipo,
+                descripcion: (row['Descripción'] || row['descripcion'] || '').trim(),
+                curso: (row['Curso'] || row['curso'] || '').trim()
+            };
+        });
+
+    success(`✅ ${eventos.length} eventos cargados desde Google Sheet`);
+
+    // Guardar en estado
+    setEventos(eventos);
 }
 
 /**
@@ -146,11 +224,11 @@ function crearEvento(datosEvento) {
 }
 
 /**
- * Agrega un nuevo evento
+ * Agrega un nuevo evento (lo guarda en N8N)
  * @param {Object} datosEvento - Datos del evento
- * @returns {boolean} True si se agregó correctamente
+ * @returns {Promise<boolean>} True si se agregó correctamente
  */
-function agregarNuevoEvento(datosEvento) {
+async function agregarNuevoEvento(datosEvento) {
     try {
         const evento = crearEvento(datosEvento);
 
@@ -165,14 +243,27 @@ function agregarNuevoEvento(datosEvento) {
             throw new Error('Fecha inválida');
         }
 
-        // Agregar al estado
+        info('💾 Guardando evento en N8N/Google Sheet...');
+
+        // Guardar en N8N
+        const response = await fetch('https://micro-bits-n8n.aejhww.easypanel.host/webhook/Guardar-Evento', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(evento)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error guardando evento: ${response.status}`);
+        }
+
+        success(`✅ Evento guardado en Google Sheet: ${evento.titulo}`);
+
+        // Agregar al estado local
         agregarEvento(evento);
 
-        // Guardar en localStorage
-        const eventos = getEventos();
-        guardarEventosEnStorage(eventos);
-
-        mostrarToast('Evento agregado correctamente', 'success');
+        mostrarToast('Evento guardado correctamente en Google Sheet', 'success');
         info(`✅ Evento agregado: ${evento.titulo}`);
 
         return true;
