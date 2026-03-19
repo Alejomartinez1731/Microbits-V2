@@ -387,7 +387,12 @@ function calcularContadorDesdePreguntas(preguntas) {
  */
 function validateEstudiante(est) {
     if (!est || typeof est !== 'object') return false;
-    if (!est.Chat_id || est.Chat_id.trim() === '') return false;
+    if (!est.Chat_id) return false;
+
+    // Convertir a string si es número u otro tipo
+    const chatId = String(est.Chat_id).trim();
+    if (chatId === '' || chatId === 'null' || chatId === 'undefined') return false;
+
     return true;
 }
 
@@ -398,7 +403,12 @@ function validateEstudiante(est) {
  */
 function validatePregunta(preg) {
     if (!preg || typeof preg !== 'object') return false;
-    if (!preg.Chat_id || preg.Chat_id.trim() === '') return false;
+    if (!preg.Chat_id) return false;
+
+    // Convertir a string si es número u otro tipo
+    const chatId = String(preg.Chat_id).trim();
+    if (chatId === '' || chatId === 'null' || chatId === 'undefined') return false;
+
     return true;
 }
 
