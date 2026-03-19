@@ -180,8 +180,11 @@ async function initCalendar() {
         // Renderizar mes actual
         renderizarMes();
 
-        // Configurar event listeners
+        // Configurar event listeners del calendario
         configurarEventListeners();
+
+        // Configurar event listeners del modal
+        inicializarModalEventos();
 
         // Marcar hoy
         marcarHoy();
@@ -215,6 +218,13 @@ function configurarEventListeners() {
     if (DOM.calToday) {
         DOM.calToday.addEventListener('click', () => {
             irAHoy();
+        });
+    }
+
+    // Botón agregar evento
+    if (DOM.btnAddEvent) {
+        DOM.btnAddEvent.addEventListener('click', () => {
+            abrirModalEvento();
         });
     }
 
@@ -483,10 +493,27 @@ function filtrarEventosDelMes(eventos) {
  * @param {Date} fecha - Fecha seleccionada
  */
 function mostrarEventosDelDia(fecha) {
-    if (DOM.eventsList) {
-        renderEventos(fecha, DOM.eventsList);
+    if (!DOM.eventsList) return;
+
+    // Verificar si es festivo
+    const festivo = esFestivo(fecha);
+
+    let html = '';
+
+    // Mostrar información del festivo si existe
+    if (festivo) {
+        html += `
+            <div class="festivo-info">
+                <i class="fas fa-certificate"></i>
+                <div class="festivo-info-content">
+                    <div class="festivo-info-title">${festivo.nombre}</div>
+                    <div class="festivo-info-type">🎉 Festivo ${festivo.tipo === 'nacional' ? 'Nacional' : festivo.tipo === 'cataluna' ? 'Cataluña' : 'Reus'}</div>
+                </div>
+            </div>
+        `;
     }
 
+    // Obtener eventos del día
     const eventos = getEventos();
     const eventosDelDia = eventos.filter(e => {
         const fechaEvento = new Date(e.fecha + 'T00:00:00');
@@ -495,9 +522,48 @@ function mostrarEventosDelDia(fecha) {
                fechaEvento.getFullYear() === fecha.getFullYear();
     });
 
+    // Mostrar eventos o mensaje de vacío
     if (eventosDelDia.length > 0) {
+        html += '<div class="events-items">';
+        eventosDelDia.forEach(e => {
+            html += `
+                <div class="event-item" data-event-id="${e.id}">
+                    <div class="event-item-header">
+                        <span class="event-item-title">${e.titulo}</span>
+                        <span class="event-badge event-${e.tipo}">${getTipoLabel(e.tipo)}</span>
+                    </div>
+                    ${e.descripcion ? `<p class="event-item-description">${e.descripcion}</p>` : ''}
+                </div>
+            `;
+        });
+        html += '</div>';
         info(`📋 ${eventosDelDia.length} eventos para ${formatearFechaStr(fecha)}`);
+    } else {
+        html += `
+            <div class="events-empty">
+                <i class="fas fa-calendar-xmark"></i>
+                <p>${festivo ? 'No hay eventos adicionales' : 'No hay eventos para este día'}</p>
+            </div>
+        `;
     }
+
+    DOM.eventsList.innerHTML = html;
+}
+
+/**
+ * Obtiene el label para un tipo de evento
+ * @param {string} tipo - Tipo de evento
+ * @returns {string} Label del tipo
+ */
+function getTipoLabel(tipo) {
+    const labels = {
+        exam: '📝 Examen',
+        practice: '💻 Práctica',
+        meeting: '👥 Reunión',
+        holiday: '🎉 Festividad',
+        other: '📌 Otro'
+    };
+    return labels[tipo] || '📌 Otro';
 }
 
 // ============================================
@@ -529,6 +595,116 @@ function esDiaHoy(fecha) {
 }
 
 // ============================================
+// MODAL DE EVENTOS
+// ============================================
+
+/**
+ * Abre el modal para crear un nuevo evento
+ */
+function abrirModalEvento() {
+    if (!DOM.eventModal || !DOM.eventForm) return;
+
+    // Limpiar formulario
+    DOM.eventForm.reset();
+
+    // Establecer fecha del día seleccionado o hoy
+    const fecha = calendarState.diaSeleccionado !== null
+        ? new Date(calendarState.añoActual, calendarState.mesActual, calendarState.diaSeleccionado)
+        : new Date();
+
+    DOM.eventDate.value = formatearFechaStr(fecha);
+
+    // Mostrar modal
+    DOM.eventModal.classList.add('active');
+
+    info('📝 Modal de evento abierto');
+}
+
+/**
+ * Cierra el modal de eventos
+ */
+function cerrarModalEvento() {
+    if (!DOM.eventModal) return;
+
+    DOM.eventModal.classList.remove('active');
+    info('❌ Modal de evento cerrado');
+}
+
+/**
+ * Inicializa los event listeners del modal de eventos
+ */
+function inicializarModalEventos() {
+    if (!DOM.eventModal) return;
+
+    // Botón cerrar (X)
+    if (DOM.modalClose) {
+        DOM.modalClose.addEventListener('click', cerrarModalEvento);
+    }
+
+    // Botón cancelar
+    if (DOM.modalCancel) {
+        DOM.modalCancel.addEventListener('click', cerrarModalEvento);
+    }
+
+    // Cerrar al hacer click fuera del modal
+    DOM.eventModal.addEventListener('click', (e) => {
+        if (e.target === DOM.eventModal) {
+            cerrarModalEvento();
+        }
+    });
+
+    // Submit del formulario
+    if (DOM.eventForm) {
+        DOM.eventForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await guardarEvento();
+        });
+    }
+
+    info('✅ Event listeners del modal de eventos configurados');
+}
+
+/**
+ * Guarda un nuevo evento
+ */
+async function guardarEvento() {
+    if (!DOM.eventTitle || !DOM.eventDate || !DOM.eventType) {
+        error('❌ Faltan elementos del formulario');
+        return;
+    }
+
+    const nuevoEvento = {
+        id: Date.now().toString(),
+        titulo: DOM.eventTitle.value,
+        fecha: DOM.eventDate.value,
+        tipo: DOM.eventType.value,
+        descripcion: DOM.eventDescription?.value || ''
+    };
+
+    try {
+        info('💾 Guardando evento:', nuevoEvento.titulo);
+
+        // Aquí iría la llamada a N8N para guardar en Google Sheets
+        // Por ahora, guardamos solo en localStorage
+        const { agregarEvento } = await import('@modules/events.js');
+        agregarEvento(nuevoEvento);
+
+        // Cerrar modal
+        cerrarModalEvento();
+
+        // Refrescar calendario
+        refrescarCalendario();
+
+        // Mostrar toast
+        const { mostrarToast } = await import('@modules/dom.js');
+        mostrarToast('Evento guardado correctamente', 'success');
+
+    } catch (err) {
+        error('❌ Error guardando evento:', err);
+    }
+}
+
+// ============================================
 // EXPORTAR
 // ============================================
 
@@ -546,5 +722,9 @@ export {
     refrescarCalendario,
 
     // Selección
-    seleccionarDia
+    seleccionarDia,
+
+    // Modal
+    abrirModalEvento,
+    cerrarModalEvento
 };

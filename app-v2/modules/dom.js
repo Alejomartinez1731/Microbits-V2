@@ -76,6 +76,7 @@ function initDOM() {
     DOM.calNextMonth = document.getElementById('cal-next-month');
     DOM.calToday = document.getElementById('cal-today');
     DOM.eventsList = document.getElementById('events-list');
+    DOM.btnAddEvent = document.getElementById('btn-add-event');
 
     // === MODALES ===
     DOM.eventModal = document.getElementById('event-modal');
