@@ -575,6 +575,50 @@ body::before {
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.6);
 }
 
+/* Indicadores de eventos por tipo */
+.day-events-indicator {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
+    align-items: center;
+}
+
+.event-badge {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 4px currentColor;
+}
+
+/* Colores por tipo de evento */
+.event-badge.event-exam {
+    background: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.event-badge.event-practice {
+    background: #4ecdc4;
+    color: #4ecdc4;
+}
+
+.event-badge.event-meeting {
+    background: #95e1d3;
+    color: #95e1d3;
+}
+
+.event-badge.event-holiday {
+    background: #ffd93d;
+    color: #ffd93d;
+}
+
+.event-badge.event-other {
+    background: #a8e6cf;
+    color: #a8e6cf;
+}
+
 .calendar-day.holiday {
     background: rgba(255, 107, 107, 0.15);
     border-color: rgba(255, 107, 107, 0.4);
