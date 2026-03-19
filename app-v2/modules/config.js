@@ -20,9 +20,9 @@ const CONFIG = {
     // ============================================
 
     // Base URL para endpoints de N8N
-    // En localhost usa http://localhost:3000/webhook (proxy server)
+    // En desarrollo usa directamente la URL de N8N
     // En producción usa /api/n8n (Vercel serverless functions)
-    baseUrl: isLocalhost ? 'http://localhost:3000/webhook' : '/api/n8n',
+    baseUrl: 'https://micro-bits-n8n.aejhww.easypanel.host/webhook',
 
     // Endpoints de N8N para diferentes operaciones
     endpoints: {
