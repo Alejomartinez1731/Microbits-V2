@@ -343,6 +343,26 @@ function setCursos(cursos) {
 }
 
 /**
+ * Actualiza el contador de estudiantes de un curso
+ * @param {string} cursoId - ID del curso
+ * @param {number} contador - Número de estudiantes
+ */
+function actualizarCursoContador(cursoId, contador) {
+    console.log('🔍 Buscando curso con ID:', cursoId);
+    console.log('📚 Cursos disponibles:', appState.cursos.map(c => ({ id: c.id, nombre: c.nombre, estudiantes: c.estudiantesHabilitados })));
+
+    const curso = appState.cursos.find(c => c.id === cursoId);
+
+    if (curso) {
+        curso.estudiantesHabilitados = contador;
+        persistState();
+        console.log(`✅ Curso actualizado: ${curso.nombre} - ${contador} estudiantes`);
+    } else {
+        console.warn(`⚠️ No se encontró curso con ID: ${cursoId}`);
+    }
+}
+
+/**
  * Establece datos del dashboard
  * @param {string} tipo - Tipo de dato
  * @param {Array|Object} datos - Datos a almacenar
@@ -539,7 +559,7 @@ function resetState() {
         estudiantes: [],
         preguntas: [],
         temas: [],
-        contador: {}
+        contador: []
     };
 
     // Reset UI
@@ -615,6 +635,7 @@ export {
     getMetrics,
     setCursoActual,
     setCursos,
+    actualizarCursoContador,
     setDatos,
     setTodosDatos,
     limpiarDatos,

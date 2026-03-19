@@ -9,7 +9,7 @@
 import { CONFIG } from '@modules/config.js';
 import { fetchDataWithRetry, clearCache, getCacheStats } from '@modules/api.js';
 import { normalizeDatos, normalizeCursos, calcularContadorDesdePreguntas, filterValidEstudiantes } from '@modules/data-normalizer.js';
-import { setCursos, setCursoActual, setDatos, setTodosDatos, getCursoActual, limpiarDatos, getCache } from '@modules/state.js';
+import { setCursos, setCursoActual, setDatos, setTodosDatos, getCursoActual, limpiarDatos, getCursos, actualizarCursoContador } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
 import { mostrarLoading, ocultarLoading, mostrarToast } from '@modules/dom.js';
 import { formatearFecha } from '@modules/utils.js';
@@ -17,6 +17,7 @@ import { info, warn, error, success } from '@modules/diagnostics.js';
 import { actualizarMetricas } from '@modules/metrics.js';
 import { actualizarGraficos } from '@modules/charts.js';
 import { renderizarTablaActual } from '@modules/table-renderer.js';
+import { irADashboard } from '@modules/navigation.js';
 
 // ============================================
 // DATOS DE EJEMPLO (FALLBACK)
@@ -119,6 +120,9 @@ async function cargarCursos() {
         // Renderizar cursos
         await renderizarCursos(cursosNormalizados);
 
+        // Actualizar selector de cursos en el dashboard
+        actualizarSelectorCursos();
+
         success(`✅ Cursos cargados: ${cursosNormalizados.length} cursos`);
         return true;
 
@@ -129,6 +133,7 @@ async function cargarCursos() {
         warn('🔄 Usando cursos de ejemplo...');
         setCursos(DATOS_EJEMPLO.cursos);
         await renderizarCursos(DATOS_EJEMPLO.cursos);
+        actualizarSelectorCursos();
 
         mostrarToast('Modo ejemplo: No se pudieron cargar los cursos', 'error');
         return false;
@@ -247,14 +252,21 @@ async function cargarTodosDatos() {
         // Normalizar datos
         const datosNormalizados = normalizeDatos(datosCrudos);
 
-        // Calcular contador desde preguntas si no hay
-        if (datosNormalizados.contador.length === 0 && datosNormalizados.preguntas.length > 0) {
-            info('🔧 Calculando contador desde preguntas...');
+        // Calcular contador desde preguntas si no hay o si todos son 0
+        const contadorTieneValoresValidos = datosNormalizados.contador.some(c => c.Contador > 0);
+        if (!contadorTieneValoresValidos && datosNormalizados.preguntas.length > 0) {
+            info('🔧 Recalculando contador desde preguntas (valores actuales son 0)...');
             datosNormalizados.contador = calcularContadorDesdePreguntas(datosNormalizados.preguntas);
         }
 
         // Guardar en estado
         setTodosDatos(datosNormalizados);
+
+        // Actualizar contador del curso en la lista de cursos
+        if (datosNormalizados.estudiantes.length > 0) {
+            info(`📊 Actualizando contador del curso: ${cursoActual.id} con ${datosNormalizados.estudiantes.length} estudiantes`);
+            actualizarCursoContador(cursoActual.id, datosNormalizados.estudiantes.length);
+        }
 
         // Verificar si tenemos datos
         const tieneDatos =
@@ -326,7 +338,7 @@ function actualizarFecha() {
  * Actualiza el selector de cursos en el dashboard
  */
 function actualizarSelectorCursos() {
-    const cursos = getCache();
+    const cursos = getCursos();
 
     if (!DOM.cursoSelect || !cursos) return;
 

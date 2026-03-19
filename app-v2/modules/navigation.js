@@ -6,10 +6,10 @@
 // Complejidad: ⭐ Fácil
 // Dependencias: state.js, dom.js, data-loader.js
 
-import { setCursoActual, getCursoActual, limpiarDatos } from '@modules/state.js';
+import { setCursoActual, getCursoActual, limpiarDatos, getCursos } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
-import { mostrarLoading, ocultarLoading } from '@modules/dom.js';
-import { cargarTodosDatos } from '@modules/data-loader.js';
+import { mostrarLoading, ocultarLoading, mostrarToast } from '@modules/dom.js';
+import { cargarTodosDatos, renderizarCursos } from '@modules/data-loader.js';
 import { info, warn, error } from '@modules/diagnostics.js';
 
 // ============================================
@@ -42,6 +42,11 @@ async function irADashboard(cursoId, cursoNombre) {
         }
         if (DOM.dashboardContainer) {
             DOM.dashboardContainer.classList.remove('hidden');
+        }
+
+        // Mostrar botón flotante de inicio
+        if (DOM.fabHome) {
+            DOM.fabHome.classList.add('visible');
         }
 
         // Actualizar título del curso en el dashboard
@@ -92,6 +97,17 @@ async function irAInicio() {
         }
         if (DOM.dashboardContainer) {
             DOM.dashboardContainer.classList.add('hidden');
+        }
+
+        // Volver a renderizar cursos con los valores actualizados
+        const cursosActualizados = getCursos();
+        if (cursosActualizados && cursosActualizados.length > 0) {
+            await renderizarCursos(cursosActualizados);
+        }
+
+        // Ocultar botón flotante de inicio
+        if (DOM.fabHome) {
+            DOM.fabHome.classList.remove('visible');
         }
 
         // Limpiar título del curso

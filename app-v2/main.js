@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             import('@modules/navigation.js'),
             import('@modules/table-renderer.js'),
             import('@modules/charts.js'),
-            import('@modules/metrics.js')
+            import('@modules/metrics.js'),
+            import('@modules/calendar.js'),
+            import('@modules/events.js')
         ]);
 
         const [
@@ -33,9 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             { setNivelLog, info: logInfo, success: logSuccess, error: logError },
             { cargarCursos },
             { inicializarNavegacion },
-            { renderizarTablaActual },
+            { renderizarTablaActual, inicializarTabs },
             { inicializarConfiguracionGlobal },
-            { inicializarMetricasInteractivas, actualizarMetricas }
+            { inicializarMetricasInteractivas, actualizarMetricas },
+            { initCalendar, refrescarCalendario },
+            { initEventListeners }
         ] = results;
 
         console.log('✅ Módulos core cargados');
@@ -72,6 +76,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         inicializarNavegacion();
 
         // ============================================
+        // INICIALIZAR TABS
+        // ============================================
+        console.log('📑 Inicializando tabs...');
+        inicializarTabs();
+
+        // ============================================
         // INICIALIZAR GRÁFICOS
         // ============================================
         console.log('📈 Inicializando gráficos...');
@@ -90,44 +100,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         await cargarCursos();
 
         // ============================================
-        // INICIALIZAR CALENDARIO
+        // INICIALIZAR CALENDARIO Y EVENTOS
         // ============================================
-        console.log('📅 Inicializando calendario...');
-        // NOTA: Este módulo aún no existe, se creará en Fase 5
-        // const { calendar } = await import('@modules/calendar.js');
-        // await calendar.cargarEventosCalendario();
-        // calendar.inicializarCalendario();
+        console.log('📅 Inicializando calendario y eventos...');
+        await initCalendar();
+        initEventListeners();
 
         // ============================================
         // SETUP DE EVENTOS GLOBALES
         // ============================================
         console.log('⚡ Configurando eventos globales...');
 
-        // Event delegation para eventos de calendario
-        document.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.event-action-btn.edit');
-            const deleteBtn = e.target.closest('.event-action-btn.delete');
-
-            if (editBtn) {
-                const eventId = editBtn.dataset.eventId;
-                if (eventId) {
-                    // events.editarEvento(eventId);
-                    console.log('✏️ Editar evento:', eventId);
-                }
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            if (deleteBtn) {
-                const eventId = deleteBtn.dataset.eventId;
-                if (eventId) {
-                    // events.eliminarEvento(eventId);
-                    console.log('🗑️ Eliminar evento:', eventId);
-                }
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        });
+        // Exponer función de refresco del calendario globalmente
+        window.refrescarCalendario = refrescarCalendario;
 
         // ============================================
         // INICIALIZACIÓN COMPLETADA
@@ -136,8 +121,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         logSuccess('✅ Microbits V2 inicializado correctamente');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('');
-        console.log('📊 Módulos cargados: 12/15 (Fase 4 completada)');
-        console.log('📦 Próximos módulos: Fase 5 (Calendar + Events)');
+        console.log('📊 Módulos cargados: 15/15 (✅ TODOS LOS MÓDULOS COMPLETADOS)');
+        console.log('📦 Fase 5 completada: Calendar + Events integrados');
         console.log('');
         console.log('🔧 Configuración:');
         console.log(`   - Rate Limiting: ${CONFIG.rateLimit.enabled ? '✅' : '❌'}`);
@@ -146,9 +131,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`   - Cache: ${CONFIG.cache.enabled ? '✅' : '❌'}`);
         console.log(`   - Persistencia: ${CONFIG.storage.enabled ? '✅' : '❌'}`);
         console.log('');
-        console.log('📖 Para continuar con el desarrollo:');
-        console.log('   Fase 5: Crear calendar.js, events.js');
-        console.log('   Fase 6: Integración final y testing');
+        console.log('📖 Arquitectura modular completada:');
+        console.log('   ✅ config.js - Configuración global');
+        console.log('   ✅ state.js - Estado centralizado');
+        console.log('   ✅ dom.js - Cache de elementos DOM');
+        console.log('   ✅ utils.js - Utilidades');
+        console.log('   ✅ diagnostics.js - Logging y debug');
+        console.log('   ✅ api.js - Cliente HTTP con retry');
+        console.log('   ✅ data-normalizer.js - Normalización de datos');
+        console.log('   ✅ data-loader.js - Carga de datos');
+        console.log('   ✅ navigation.js - Navegación');
+        console.log('   ✅ table-renderer.js - Renderizado de tablas');
+        console.log('   ✅ charts.js - Gráficos interactivos');
+        console.log('   ✅ metrics.js - Métricas del dashboard');
+        console.log('   ✅ calendar.js - Calendario académico');
+        console.log('   ✅ events.js - Gestión de eventos');
+        console.log('');
+        console.log('🚀 Próximo paso: Fase 6 - Integración final y testing');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     } catch (error) {
@@ -267,80 +266,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         body.appendChild(errorOverlay);
     }
 });
-
-// ============================================
-// NAVEGACIÓN SIMPLE (temporal hasta navigation.js)
-// ============================================
-
-/**
- * Navega al dashboard de un curso
- * @param {string} cursoId - ID del curso
- * @param {string} cursoNombre - Nombre del curso
- */
-window.irADashboard = async function(cursoId, cursoNombre) {
-    try {
-        console.log(`🎯 Navegando a dashboard: ${cursoNombre} (${cursoId})`);
-
-        // Importar módulos necesarios
-        const { setCursoActual } = await import('@modules/state.js');
-        const { getCursoActual } = await import('@modules/state.js');
-        const { DOM } = await import('@modules/dom.js');
-        const { dom } = await import('@modules/dom.js');
-
-        // Establecer curso actual
-        setCursoActual(cursoId, cursoNombre);
-
-        // Ocultar home y mostrar dashboard
-        if (DOM.homeContainer && DOM.dashboardContainer) {
-            DOM.homeContainer.classList.add('hidden');
-            DOM.dashboardContainer.classList.remove('hidden');
-        }
-
-        // Actualizar título
-        if (DOM.cursoTitulo) {
-            DOM.cursoTitulo.textContent = cursoNombre;
-        }
-
-        // Actualizar selector de cursos
-        if (DOM.cursoSelect) {
-            DOM.cursoSelect.value = cursoId;
-        }
-
-        // Cargar datos del dashboard
-        const { cargarTodosDatos } = await import('@modules/data-loader.js');
-        await cargarTodosDatos();
-
-        console.log(`✅ Dashboard cargado: ${cursoNombre}`);
-
-    } catch (error) {
-        console.error('❌ Error navegando al dashboard:', error);
-    }
-};
-
-/**
- * Navega a la página de inicio
- */
-window.irAInicio = async function() {
-    try {
-        console.log('🏠 Navegando a inicio...');
-
-        const { limpiarDatos } = await import('@modules/state.js');
-        const { setCursoActual } = await import('@modules/state.js');
-        const { DOM } = await import('@modules/dom.js');
-
-        // Limpiar curso actual
-        setCursoActual(null, null);
-        limpiarDatos();
-
-        // Mostrar home y ocultar dashboard
-        if (DOM.homeContainer && DOM.dashboardContainer) {
-            DOM.homeContainer.classList.remove('hidden');
-            DOM.dashboardContainer.classList.add('hidden');
-        }
-
-        console.log('✅ De vuelta al inicio');
-
-    } catch (error) {
-        console.error('❌ Error navegando a inicio:', error);
-    }
-};
+// NOTA: Las funciones de navegación (irADashboard, irAInicio) son provistas
+// por el módulo navigation.js y expuestas globalmente durante la inicialización.

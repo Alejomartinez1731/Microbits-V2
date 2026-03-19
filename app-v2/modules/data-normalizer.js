@@ -193,16 +193,21 @@ function normalizeCurso(curso) {
         };
     }
 
-    return {
+    const normalizado = {
         id: normalizeString(curso, ['id', 'nombre', 'nombre_curso'], 'unknown'),
         nombre: normalizeString(curso, ['nombre', 'nombre_curso', 'curso'], 'Curso sin nombre'),
         nivel: normalizeString(curso, ['nivel', 'Nivel'], 'Activo'),
         estudiantesHabilitados: normalizeNumber(
             curso,
-            ['estudiantesHabilitados', 'totalEstudiantes', 'alumnos', 'Alumnos'],
+            ['estudiantesHabilitados', 'totalEstudiantes', 'estudiantes', 'alumnos', 'Alumnos', 'count', 'cantidad'],
             0
         )
     };
+
+    // Log para depuración
+    debug(`🔍 Curso normalizado: ${normalizado.nombre} - ${normalizado.estudiantesHabilitados} estudiantes`);
+
+    return normalizado;
 }
 
 // ============================================

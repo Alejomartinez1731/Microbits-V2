@@ -6,10 +6,11 @@
 // Complejidad: ⭐⭐ Media
 // Dependencias: state.js, dom.js, utils.js, diagnostics.js
 
-import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual } from '@modules/state.js';
+import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual, setTabActual } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
 import { formatearFecha, calcularPorcentaje } from '@modules/utils.js';
 import { info, warn, error } from '@modules/diagnostics.js';
+import { inicializarGraficoTemas, inicializarGraficoActivos } from '@modules/charts.js';
 
 // ============================================
 // TABLA DE ESTUDIANTES
@@ -197,6 +198,9 @@ function renderizarActivos() {
             DOM.chartActivosContainer.classList.remove('hidden');
         }
 
+        // Inicializar gráfico de estudiantes activos
+        inicializarGraficoActivos(filtrados);
+
         // Paginar
         const pagina = getPaginaActual();
         const itemsPerPage = 10;
@@ -299,6 +303,9 @@ function renderizarTemas() {
             DOM.chartTemasContainer.classList.remove('hidden');
         }
 
+        // Inicializar gráfico de temas
+        inicializarGraficoTemas(temasArray);
+
         // Paginar
         const pagina = getPaginaActual();
         const itemsPerPage = 10;
@@ -318,11 +325,13 @@ function renderizarTemas() {
                     <td><strong>${t.tema}</strong></td>
                     <td><span class="contador-badge">${t.count}</span></td>
                     <td>
-                        <div class="progress-bar-mini">
-                            <div class="progress-bar-fill" style="width: ${porcentaje}"></div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${porcentaje}"></div>
+                            </div>
+                            <span style="font-size: 12px; min-width: 45px;">${porcentaje}</span>
                         </div>
                     </td>
-                    <td>${porcentaje}</td>
                 </tr>
             `;
         }).join('');
@@ -350,17 +359,28 @@ function renderizarTablaActual() {
     try {
         const tabActual = getTabActual();
 
+        // Ocultar todas las tablas primero
+        if (DOM.tablaEstudiantes) DOM.tablaEstudiantes.classList.add('hidden');
+        if (DOM.tablaPreguntas) DOM.tablaPreguntas.classList.add('hidden');
+        if (DOM.tablaActivos) DOM.tablaActivos.classList.add('hidden');
+        if (DOM.tablaTemas) DOM.tablaTemas.classList.add('hidden');
+
+        // Mostrar la tabla correspondiente
         switch (tabActual) {
             case 'estudiantes':
+                if (DOM.tablaEstudiantes) DOM.tablaEstudiantes.classList.remove('hidden');
                 renderizarEstudiantes();
                 break;
             case 'preguntas':
+                if (DOM.tablaPreguntas) DOM.tablaPreguntas.classList.remove('hidden');
                 renderizarPreguntas();
                 break;
             case 'activos':
+                if (DOM.tablaActivos) DOM.tablaActivos.classList.remove('hidden');
                 renderizarActivos();
                 break;
             case 'temas':
+                if (DOM.tablaTemas) DOM.tablaTemas.classList.remove('hidden');
                 renderizarTemas();
                 break;
             default:
@@ -437,6 +457,39 @@ function actualizarPaginacion(total, pagina = 1, itemsPerPage = 10) {
     }
 }
 
+/**
+ * Inicializa los event listeners de las tabs
+ */
+function inicializarTabs() {
+    if (!DOM.tabs || DOM.tabs.length === 0) {
+        warn('⚠️ No se encontraron tabs para inicializar');
+        return;
+    }
+
+    DOM.tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            if (!tabName) return;
+
+            // Remover clase active de todas las tabs
+            DOM.tabs.forEach(t => t.classList.remove('active'));
+
+            // Agregar clase active a la tab clickeada
+            tab.classList.add('active');
+
+            // Cambiar tab actual en el estado
+            setTabActual(tabName);
+
+            // Renderizar la tabla correspondiente
+            renderizarTablaActual();
+
+            info(`✅ Tab cambiada a: ${tabName}`);
+        });
+    });
+
+    info('✅ Tabs inicializadas');
+}
+
 // ============================================
 // EXPORTAR
 // ============================================
@@ -447,5 +500,8 @@ export {
     renderizarPreguntas,
     renderizarActivos,
     renderizarTemas,
-    renderizarTablaActual
+    renderizarTablaActual,
+
+    // Inicialización
+    inicializarTabs
 };
