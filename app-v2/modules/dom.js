@@ -404,6 +404,20 @@ function ocultarLoading() {
 function mostrarToast(mensaje, tipo = 'info') {
     if (!DOM.toastContainer) return;
 
+    // Evitar toasts duplicados con el mismo mensaje (dentro de 1 segundo)
+    const now = Date.now();
+    const lastToasts = window._lastToasts || [];
+    const duplicateKey = `${tipo}:${mensaje}`;
+    const isDuplicate = lastToasts.some(t => t.key === duplicateKey && now - t.time < 1000);
+    if (isDuplicate) {
+        console.log('⚠️ Toast duplicado prevenido:', mensaje);
+        return;
+    }
+
+    // Actualizar historial de toasts
+    window._lastToasts = lastToasts.filter(t => now - t.time < 2000);
+    window._lastToasts.push({ key: duplicateKey, time: now });
+
     // Crear elemento del toast
     const toast = document.createElement('div');
     toast.className = `toast toast-${tipo}`;
