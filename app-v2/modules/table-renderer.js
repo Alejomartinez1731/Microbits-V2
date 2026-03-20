@@ -515,11 +515,13 @@ async function toggleEstudiante(chatId, estadoActual) {
     info(`🔄 Cambiando estado de estudiante ${chatId} a ${nuevoEstado ? 'habilitado' : 'deshabilitado'}`);
 
     try {
-        // Usar URL según entorno (proxy local en desarrollo, N8N directo en prod)
+        // Usar URL según entorno
+        // - Desarrollo local: proxy local
+        // - Producción Vercel: serverless function
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const toggleUrl = isLocalhost
             ? '/webhook/toggle-estudiante'
-            : 'https://micro-bits-n8n.aejhww.easypanel.host/webhook/toggle-estudiante';
+            : '/api/n8n/toggle-estudiante';
 
         // Llamar al webhook
         const response = await fetch(toggleUrl, {

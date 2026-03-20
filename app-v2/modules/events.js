@@ -24,6 +24,15 @@ import { fetchDataWithRetry } from '@modules/api.js';
 
 const STORAGE_KEY = 'microbits_calendario_eventos';
 
+// Helper para obtener URL según entorno
+function getApiUrl(endpoint) {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // En local usa N8N directo, en prod usa serverless functions de Vercel
+    return isLocalhost
+        ? `https://micro-bits-n8n.aejhww.easypanel.host/webhook/${endpoint}`
+        : `/api/n8n/${endpoint}`;
+}
+
 const TIPOS_EVENTO = {
     exam: { label: '📝 Examen/Parcial', color: 'exam' },
     practice: { label: '💻 Práctica', color: 'practice' },
@@ -248,7 +257,7 @@ async function agregarNuevoEvento(datosEvento) {
         info('💾 Guardando evento en N8N/Google Sheet...');
 
         // Guardar en N8N
-        const response = await fetch('https://micro-bits-n8n.aejhww.easypanel.host/webhook/Guardar-Evento', {
+        const response = await fetch(getApiUrl('Guardar-Evento'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -343,7 +352,7 @@ async function eliminarEvento(eventoId) {
         info('📤 Enviando al webhook:', { id: eventoId, evento });
 
         try {
-            const response = await fetch('https://micro-bits-n8n.aejhww.easypanel.host/webhook/Eliminar-evento', {
+            const response = await fetch(getApiUrl('Eliminar-evento'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
