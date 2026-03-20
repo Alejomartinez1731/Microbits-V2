@@ -552,11 +552,35 @@ async function toggleEstudiante(chatId, estadoActual) {
         const data = JSON.parse(responseText);
         info('✅ Respuesta de N8N:', data);
 
-        // Actualizar estado local (como en el código anterior)
+        // Actualizar estado local primero
         actualizarEstudianteHabilitado(chatId, nuevoEstado);
 
-        // Re-renderizar tabla con el estado actualizado
-        renderizarEstudiantes();
+        // Actualizar el DOM directamente (más rápido que re-renderizar toda la tabla)
+        const fila = toggleElement.closest('tr');
+        if (fila) {
+            // Actualizar el badge de estado
+            const badge = fila.querySelector('.badge');
+            if (badge) {
+                badge.className = `badge ${nuevoEstado ? 'badge-active' : 'badge-inactive'}`;
+                badge.textContent = nuevoEstado ? 'Habilitado' : 'Deshabilitado';
+            }
+
+            // Actualizar el toggle visualmente
+            if (nuevoEstado) {
+                toggleElement.classList.add('active');
+            } else {
+                toggleElement.classList.remove('active');
+            }
+
+            // Actualizar el onclick con el nuevo estado
+            toggleElement.setAttribute('onclick',
+                `window.toggleEstudiante && window.toggleEstudiante('${chatId}', ${nuevoEstado})`
+            );
+        }
+
+        // También actualizar métricas
+        const { actualizarMetricas } = await import('@modules/metrics.js');
+        actualizarMetricas();
 
         mostrarToast(
             `Estudiante ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente`,
@@ -567,6 +591,14 @@ async function toggleEstudiante(chatId, estadoActual) {
     } catch (err) {
         error('❌ Error toggling estudiante:', err);
         mostrarToast(`Error: ${err.message}`, 'error');
+        // Si hay error, revertir el toggle visualmente
+        if (toggleElement) {
+            if (estadoActual) {
+                toggleElement.classList.add('active');
+            } else {
+                toggleElement.classList.remove('active');
+            }
+        }
     }
 }
 
