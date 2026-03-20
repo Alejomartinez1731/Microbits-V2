@@ -12,7 +12,7 @@ import {
 } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
 import { info, warn, error } from '@modules/diagnostics.js';
-import { cargarEventos, renderizarEventosDelDia as renderEventos } from '@modules/events.js';
+import { cargarEventos, renderizarEventosDelDia as renderEventos, llenarSelectHoras, llenarSelectCursos } from '@modules/events.js';
 
 // ============================================
 // ESTADO DEL CALENDARIO
@@ -522,17 +522,36 @@ function mostrarEventosDelDia(fecha) {
                fechaEvento.getFullYear() === fecha.getFullYear();
     });
 
+    // Ordenar eventos por hora
+    eventosDelDia.sort((a, b) => {
+        if (!a.hora && !b.hora) return 0;
+        if (!a.hora) return 1;
+        if (!b.hora) return -1;
+        return a.hora.localeCompare(b.hora);
+    });
+
     // Mostrar eventos o mensaje de vacío
     if (eventosDelDia.length > 0) {
         html += '<div class="events-items">';
         eventosDelDia.forEach(e => {
+            const hora = e.hora || '';
+            const horaDisplay = hora ? `<span class="event-item-time"><i class="fas fa-clock"></i> ${hora}</span>` : '';
+            const curso = e.curso ? `<span class="event-item-course"><i class="fas fa-graduation-cap"></i> ${e.curso}</span>` : '';
+
             html += `
                 <div class="event-item" data-event-id="${e.id}">
                     <div class="event-item-header">
                         <span class="event-item-title">${e.titulo}</span>
-                        <span class="event-badge event-${e.tipo}">${getTipoLabel(e.tipo)}</span>
+                        <span class="event-type-badge event-${e.tipo}">${getTipoLabel(e.tipo)}</span>
                     </div>
+                    ${horaDisplay ? horaDisplay : ''}
+                    ${curso ? curso : ''}
                     ${e.descripcion ? `<p class="event-item-description">${e.descripcion}</p>` : ''}
+                    <div class="event-actions">
+                        <button class="btn-event-delete" onclick="window.eliminarEventoClick && window.eliminarEventoClick('${e.id}')" title="Eliminar evento">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         });
@@ -614,6 +633,10 @@ function abrirModalEvento() {
 
     DOM.eventDate.value = formatearFechaStr(fecha);
 
+    // Llenar selects dinámicos
+    llenarSelectHoras();
+    llenarSelectCursos();
+
     // Mostrar modal
     DOM.eventModal.classList.add('active');
 
@@ -677,8 +700,10 @@ async function guardarEvento() {
         id: Date.now().toString(),
         titulo: DOM.eventTitle.value,
         fecha: DOM.eventDate.value,
+        hora: DOM.eventTime?.value || null,
         tipo: DOM.eventType.value,
-        descripcion: DOM.eventDescription?.value || ''
+        descripcion: DOM.eventDescription?.value || '',
+        curso: DOM.eventCourse?.value || null
     };
 
     try {

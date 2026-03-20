@@ -85,10 +85,11 @@ function initDOM() {
     DOM.eventForm = document.getElementById('event-form');
     DOM.eventTitle = document.getElementById('event-title');
     DOM.eventDate = document.getElementById('event-date');
+    DOM.eventTime = document.getElementById('event-time');
     DOM.eventType = document.getElementById('event-type');
     DOM.eventDescription = document.getElementById('event-description');
     DOM.eventCourse = document.getElementById('event-course');
-    DOM.modalCancel = document.getElementById('modal-cancel');
+    DOM.modalCancel = document.getElementById('btn-cancel');
 
     // === LOADING Y TOASTS ===
     DOM.loadingOverlay = document.getElementById('loading');

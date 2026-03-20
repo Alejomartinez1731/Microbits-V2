@@ -140,6 +140,7 @@ function procesarEventosDesdeN8N(rawData) {
                 id: String(id),
                 titulo: (row['Titulo del evento '] || row['Titulo'] || row['titulo'] || row['Título'] || 'Sin título').trim(),
                 fecha: fechaNormalizada,
+                hora: (row['Hora'] || row['hora'] || '').trim(),
                 tipo: tipo,
                 descripcion: (row['Descripción'] || row['descripcion'] || '').trim(),
                 curso: (row['Curso'] || row['curso'] || '').trim()
@@ -215,6 +216,7 @@ function crearEvento(datosEvento) {
         id: generarEventoId(),
         titulo: datosEvento.titulo || '',
         fecha: datosEvento.fecha || '',
+        hora: datosEvento.hora || null,
         tipo: datosEvento.tipo || 'other',
         descripcion: datosEvento.descripcion || '',
         curso: datosEvento.curso || null
@@ -321,11 +323,11 @@ function modificarEvento(eventoId, datosActualizados) {
 }
 
 /**
- * Elimina un evento
+ * Elimina un evento (incluye eliminación del Google Sheet)
  * @param {string} eventoId - ID del evento a eliminar
- * @returns {boolean} True si se eliminó correctamente
+ * @returns {Promise<boolean>} True si se eliminó correctamente
  */
-function eliminarEvento(eventoId) {
+async function eliminarEvento(eventoId) {
     try {
         const eventos = getEventos();
         const index = eventos.findIndex(e => e.id === eventoId);
@@ -334,7 +336,38 @@ function eliminarEvento(eventoId) {
             throw new Error('Evento no encontrado');
         }
 
-        // Eliminar del estado
+        const evento = eventos[index];
+
+        // Eliminar del Google Sheet vía N8N
+        info('🗑️ Eliminando evento del Google Sheet...');
+        info('📤 Enviando al webhook:', { id: eventoId, evento });
+
+        try {
+            const response = await fetch('https://micro-bits-n8n.aejhww.easypanel.host/webhook/Eliminar-evento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: eventoId, evento: evento })
+            });
+
+            info(`📥 Respuesta del webhook: ${response.status} ${response.statusText}`);
+
+            const responseData = await response.json().catch(() => null);
+            if (responseData) {
+                info('📥 Datos de respuesta:', responseData);
+            }
+
+            if (!response.ok) {
+                warn('⚠️ No se pudo eliminar del Google Sheet, eliminando solo localmente');
+            } else {
+                success('✅ Evento eliminado del Google Sheet');
+            }
+        } catch (fetchErr) {
+            warn('⚠️ Error de conexión con N8N, eliminando solo localmente:', fetchErr);
+        }
+
+        // Eliminar del estado local
         eliminarEventoState(eventoId);
 
         // Guardar en localStorage
@@ -378,8 +411,13 @@ function renderizarEventosDelDia(fecha, contenedor) {
                fechaEvento.getFullYear() === fecha.getFullYear();
     });
 
-    // Ordenar por tipo
-    eventosDelDia.sort((a, b) => a.tipo.localeCompare(b.tipo));
+    // Ordenar por hora (los con hora primero, luego por hora)
+    eventosDelDia.sort((a, b) => {
+        if (!a.hora && !b.hora) return 0;
+        if (!a.hora) return 1;
+        if (!b.hora) return -1;
+        return a.hora.localeCompare(b.hora);
+    });
 
     // Si no hay eventos
     if (eventosDelDia.length === 0) {
@@ -398,25 +436,36 @@ function renderizarEventosDelDia(fecha, contenedor) {
         const titulo = evento.titulo || 'Sin título';
         const descripcion = evento.descripcion || '';
         const curso = evento.curso || '';
+        const hora = evento.hora || '';
+
+        // Formatear hora para mostrar
+        let horaFormateada = '';
+        if (hora) {
+            const [horas, minutos] = hora.split(':');
+            horaFormateada = `${horas}:${minutos}`;
+        }
 
         return `
             <div class="event-item event-${evento.tipo}" data-evento-id="${evento.id}">
+                ${hora ? `
+                <div class="event-time-badge">
+                    <i class="fas fa-clock"></i>
+                    <span>${horaFormateada}</span>
+                </div>
+                ` : ''}
                 <div class="event-icon">
                     <i class="fas fa-calendar-check"></i>
                 </div>
                 <div class="event-content">
                     <div class="event-header">
                         <span class="event-title">${titulo}</span>
-                        <span class="event-badge ${tipoInfo.color}">${tipoInfo.label}</span>
+                        <span class="event-type-badge ${tipoInfo.color}">${tipoInfo.label}</span>
                     </div>
-                    ${descripcion ? `<p class="event-description">${descripcion}</p>` : ''}
                     ${curso ? `<span class="event-course"><i class="fas fa-graduation-cap"></i> ${curso}</span>` : ''}
+                    ${descripcion ? `<p class="event-description">${descripcion}</p>` : ''}
                 </div>
                 <div class="event-actions">
-                    <button class="btn-event-edit" onclick="window.editarEvento && window.editarEvento('${evento.id}')" title="Editar">
-                        <i class="fas fa-pencil"></i>
-                    </button>
-                    <button class="btn-event-delete" onclick="window.eliminarEventoClick && window.eliminarEventoClick('${evento.id}')" title="Eliminar">
+                    <button class="btn-event-delete" onclick="window.eliminarEventoClick && window.eliminarEventoClick('${evento.id}')" title="Eliminar evento">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -460,7 +509,7 @@ function renderizarTodosEventos(contenedor) {
                 <div class="event-content">
                     <div class="event-header">
                         <span class="event-date">${fechaFormateada}</span>
-                        <span class="event-badge ${tipoInfo.color}">${tipoInfo.label}</span>
+                        <span class="event-type-badge ${tipoInfo.color}">${tipoInfo.label}</span>
                     </div>
                     <div class="event-title">${evento.titulo}</div>
                     ${evento.descripcion ? `<p class="event-description">${evento.descripcion}</p>` : ''}
@@ -490,6 +539,10 @@ function abrirModalEvento(eventoId = null) {
     // Resetear formulario
     form.reset();
 
+    // Llenar selects dinámicos PRIMERO (antes de establecer valores)
+    llenarSelectHoras();
+    llenarSelectCursos();
+
     if (eventoId) {
         // Modo edición
         const eventos = getEventos();
@@ -503,6 +556,7 @@ function abrirModalEvento(eventoId = null) {
 
             document.getElementById('event-title').value = evento.titulo || '';
             document.getElementById('event-date').value = evento.fecha || '';
+            document.getElementById('event-time').value = evento.hora || '';
             document.getElementById('event-type').value = evento.tipo || 'other';
             document.getElementById('event-description').value = evento.descripcion || '';
             document.getElementById('event-course').value = evento.curso || '';
@@ -527,7 +581,7 @@ function abrirModalEvento(eventoId = null) {
     }
 
     // Mostrar modal
-    modal.classList.remove('hidden');
+    modal.classList.add('active');
 }
 
 /**
@@ -537,7 +591,7 @@ function cerrarModalEvento() {
     const modal = DOM.eventModal;
     if (!modal) return;
 
-    modal.classList.add('hidden');
+    modal.classList.remove('active');
 }
 
 /**
@@ -551,6 +605,7 @@ function guardarEventoDesdeModal() {
     const datos = {
         titulo: document.getElementById('event-title').value.trim(),
         fecha: document.getElementById('event-date').value,
+        hora: document.getElementById('event-time').value || null,
         tipo: document.getElementById('event-type').value,
         descripcion: document.getElementById('event-description').value.trim(),
         curso: document.getElementById('event-course').value || null
@@ -568,12 +623,85 @@ function guardarEventoDesdeModal() {
     cerrarModalEvento();
 
     // Refrescar calendario
-    // Esto se hará desde calendar.js
+    if (window.refrescarCalendario) {
+        window.refrescarCalendario();
+    }
 }
 
 // ============================================
 // UTILIDADES
 // ============================================
+
+/**
+ * Llena el select de horas con intervalos de 30 minutos
+ */
+function llenarSelectHoras() {
+    const select = document.getElementById('event-time');
+    if (!select) return;
+
+    // Guardar selección actual
+    const valorActual = select.value;
+
+    // Mantener solo la primera opción
+    select.innerHTML = '<option value="">-- Sin hora --</option>';
+
+    // Generar horas de 8:00 a 20:00 en intervalos de 30 min
+    for (let hora = 8; hora <= 20; hora++) {
+        for (let min = 0; min < 60; min += 30) {
+            const horaStr = String(hora).padStart(2, '0');
+            const minStr = String(min).padStart(2, '0');
+            const option = document.createElement('option');
+            option.value = `${horaStr}:${minStr}`;
+            option.textContent = `${horaStr}:${minStr}`;
+            select.appendChild(option);
+        }
+    }
+
+    // Restaurar selección si existe
+    if (valorActual) {
+        select.value = valorActual;
+    }
+}
+
+/**
+ * Llena el select de cursos con los cursos del estado
+ */
+function llenarSelectCursos() {
+    const select = document.getElementById('event-course');
+    if (!select) return;
+
+    // Guardar selección actual
+    const valorActual = select.value;
+
+    // Mantener solo la primera opción
+    select.innerHTML = '<option value="">-- Seleccionar curso --</option>';
+
+    // Importar getCursos dinámicamente para evitar circular dependency
+    import('@modules/state.js').then(({ getCursos }) => {
+        const cursos = getCursos();
+
+        if (!cursos || cursos.length === 0) {
+            info('⚠️ No hay cursos disponibles para el select');
+            return;
+        }
+
+        cursos.forEach(curso => {
+            const option = document.createElement('option');
+            option.value = curso.nombre;
+            option.textContent = curso.nombre;
+            select.appendChild(option);
+        });
+
+        // Restaurar selección si existe
+        if (valorActual) {
+            select.value = valorActual;
+        }
+
+        info(`✅ Select de cursos llenado con ${cursos.length} cursos`);
+    }).catch(err => {
+        error('❌ Error cargando cursos para el select:', err);
+    });
+}
 
 /**
  * Genera un ID único para un evento
@@ -624,9 +752,9 @@ function initEventListeners() {
 
     // Exponer funciones globalmente
     window.editarEvento = abrirModalEvento;
-    window.eliminarEventoClick = (eventoId) => {
+    window.eliminarEventoClick = async (eventoId) => {
         if (confirm('¿Estás seguro de eliminar este evento?')) {
-            eliminarEvento(eventoId);
+            await eliminarEvento(eventoId);
             // Refrescar calendario
             if (window.refrescarCalendario) {
                 window.refrescarCalendario();
@@ -663,6 +791,10 @@ export {
     abrirModalEvento,
     cerrarModalEvento,
     guardarEventoDesdeModal,
+
+    // Utilidades
+    llenarSelectHoras,
+    llenarSelectCursos,
 
     // Inicialización
     initEventListeners

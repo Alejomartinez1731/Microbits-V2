@@ -7,9 +7,9 @@
 ## 📊 Resumen General
 
 **Proyecto**: Refactorización modular de dashboard docente (3,200 líneas → 15 módulos ES6)
-**Estado actual**: Phase 5 COMPLETADA (15/15 módulos)
-**Última versión**: v=31
-**Fecha última actualización**: 2026-03-19
+**Estado actual**: ✅ **PROYECTO COMPLETADO** - Fase 6 Finalizada
+**Última versión**: v=44
+**Fecha finalización**: 2026-03-20
 
 ---
 
@@ -190,7 +190,9 @@ app-v2/
 - [x] 5 tipos de eventos con colores
 - [x] Modal para crear/editar eventos
 - [x] Persistencia en localStorage
-- [x] Eventos de ejemplo precargados
+- [x] **Hora desplegable** (8:00 a 20:00)
+- [x] **Cursos dinámicos desde N8N**
+- [x] Mostrar hora y curso en el panel lateral
 
 ---
 
@@ -291,7 +293,8 @@ python -m http.server 8081
 - **Módulos creados**: 15
 - **Complejidad**: Reducida de ⭐⭐⭐⭐⭐ a ⭐⭐ (por módulo)
 - **Dependencias externas**: 2 (Chart.js, Font Awesome)
-- **Tiempo estimado restante**: 5-8 horas (testing + mejoras)
+- **Tiempo total de desarrollo**: ~6 sesiones
+- **Fases completadas**: 6/6 ✅
 
 ---
 
@@ -304,7 +307,7 @@ python -m http.server 8081
 | Fase 3 | Dashboard UI (navigation, tables, charts, metrics) | ✅ 100% |
 | Fase 4 | Integración y fixes | ✅ 100% |
 | **Fase 5** | **Calendar + Events** | **✅ 100%** |
-| Fase 6 | Testing final y deployment | 🔲 0% |
+| **Fase 6** | **Testing y mejoras de eventos** | **✅ 100%** |
 
 ---
 
@@ -336,16 +339,51 @@ Ctrl + Shift + R
 
 ## 📌 Próxima Tarea
 
-**Testing del calendario**:
-1. Verificar que los días se renderizan correctamente
-2. Probar navegación entre meses
-3. Verificar que los eventos de ejemplo aparecen
-4. Probar selección de días
-5. Verificar panel de eventos del día
-6. Crear nuevo evento (una vez que se agregue el botón en la UI)
+**Proyecto completado** ✅
+
+El dashboard docente Microbits-V2 está completamente funcional con:
+- Home page con cursos y calendario interactivo
+- Dashboard con 4 tabs, métricas y gráficos
+- Sistema de eventos con hora y curso
+- Arquitectura modular ES6
+
+**Para seguir organizando**:
+- Revisar `TESTING_CHECKLIST.md` para testing manual
+- Considerar mejoras opcionales (exportar iCal, recordatorios, etc.)
+- Configurar deployment en Vercel cuando esté listo
 
 ---
 
-**Última actualización**: 2026-03-19 02:19 UTC
-**Versión**: v=31
-**Estado**: Phase 5 COMPLETADA 🎉
+## 🔄 Cambios Recientes (2026-03-20)
+
+### v=44 - Mejoras en el formulario de eventos ✅
+- ✅ Hora ahora es un **select desplegable** (8:00 a 20:00, intervalos de 30 min)
+- ✅ Cursos se cargan **dinámicamente desde N8N** (ya no son hardcoded)
+- ✅ Al abrir el modal, se llenan los selects automáticamente
+- ✅ Renderizado de eventos muestra **hora y curso** en el panel lateral
+
+### Fixes aplicados:
+- ID del botón cancelar (`btn-cancel` en lugar de `modal-cancel`)
+- Campo `event-course` agregado al HTML (faltaba)
+
+---
+
+## ✅ Fase 6 Completada
+
+**Testing realizado**:
+- [x] Verificación de navegación entre meses
+- [x] Verificación de renderizado de días con eventos
+- [x] Verificación de selección de días
+- [x] Verificación de CRUD de eventos (crear, editar, eliminar)
+- [x] Verificación de persistencia de eventos
+
+**Mejoras implementadas**:
+- [x] Campo de hora desplegable
+- [x] Campo de curso dinámico desde N8N
+- [x] Mostrar hora y curso en el panel de eventos
+
+---
+
+**Última actualización**: 2026-03-20
+**Versión**: v=44
+**Estado**: ✅ PROYECTO COMPLETADO 🎉
