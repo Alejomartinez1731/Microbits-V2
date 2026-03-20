@@ -373,6 +373,21 @@ function setDatos(tipo, datos) {
 }
 
 /**
+ * Actualiza el estado habilitado/deshabilitado de un estudiante localmente
+ * @param {string|number} chatId - Chat ID del estudiante
+ * @param {boolean} habilitado - Nuevo estado
+ */
+function actualizarEstudianteHabilitado(chatId, habilitado) {
+    const estudiante = appState.datos.estudiantes.find(e => e.Chat_id == chatId);
+    if (estudiante) {
+        estudiante.habilitado = habilitado;
+        console.log(`💾 Estudiante ${chatId} actualizado localmente: ${habilitado ? 'habilitado' : 'deshabilitado'}`);
+        return true;
+    }
+    return false;
+}
+
+/**
  * Establece múltiples datos a la vez
  * @param {Object} datos - Objeto con todos los datos
  */
@@ -636,6 +651,7 @@ export {
     setCursoActual,
     setCursos,
     actualizarCursoContador,
+    actualizarEstudianteHabilitado,
     setDatos,
     setTodosDatos,
     limpiarDatos,

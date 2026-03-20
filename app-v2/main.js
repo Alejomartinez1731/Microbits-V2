@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             { setNivelLog, info: logInfo, success: logSuccess, error: logError },
             { cargarCursos },
             { inicializarNavegacion },
-            { renderizarTablaActual, inicializarTabs },
+            { renderizarTablaActual, inicializarTabs, inicializarBusqueda, toggleEstudiante },
             { inicializarConfiguracionGlobal },
             { inicializarMetricasInteractivas, actualizarMetricas },
             { initCalendar, refrescarCalendario },
@@ -82,6 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         inicializarTabs();
 
         // ============================================
+        // INICIALIZAR BÚSQUEDA CON DEBOUNCING
+        // ============================================
+        console.log('🔍 Inicializando búsqueda...');
+        inicializarBusqueda();
+
+        // ============================================
         // INICIALIZAR GRÁFICOS
         // ============================================
         console.log('📈 Inicializando gráficos...');
@@ -113,6 +119,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Exponer función de refresco del calendario globalmente
         window.refrescarCalendario = refrescarCalendario;
+
+        // Exponer función de toggle de estudiante globalmente
+        window.toggleEstudiante = toggleEstudiante;
 
         // ============================================
         // INICIALIZACIÓN COMPLETADA

@@ -6,11 +6,12 @@
 // Complejidad: ⭐⭐ Media
 // Dependencias: state.js, dom.js, utils.js, diagnostics.js
 
-import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual, setTabActual } from '@modules/state.js';
+import { getDatos, getTabActual, getTerminoBusqueda, getPaginaActual, setPaginaActual, setTabActual, setTerminoBusqueda, getCursoActual, actualizarEstudianteHabilitado } from '@modules/state.js';
 import { DOM } from '@modules/dom.js';
-import { formatearFecha, calcularPorcentaje } from '@modules/utils.js';
-import { info, warn, error } from '@modules/diagnostics.js';
+import { formatearFecha, calcularPorcentaje, debounce } from '@modules/utils.js';
+import { info, warn, error, success } from '@modules/diagnostics.js';
 import { inicializarGraficoTemas, inicializarGraficoActivos } from '@modules/charts.js';
+import { mostrarToast } from '@modules/dom.js';
 
 // ============================================
 // TABLA DE ESTUDIANTES
@@ -491,6 +492,127 @@ function inicializarTabs() {
 }
 
 // ============================================
+// TOGGLE DE ESTUDIANTES
+// ============================================
+
+/**
+ * Cambia el estado de habilitado/deshabilitado de un estudiante
+ * @param {string} chatId - Chat ID del estudiante
+ * @param {boolean} estadoActual - Estado actual del estudiante
+ */
+async function toggleEstudiante(chatId, estadoActual) {
+    const toggleElement = document.querySelector(`[data-chatid="${chatId}"]`);
+    if (!toggleElement) {
+        error('❌ No se encontró el toggle element');
+        return;
+    }
+
+    const nuevoEstado = !estadoActual;
+    const curso = getCursoActual();
+    // Si curso es un objeto con id/nombre, enviar solo el nombre
+    const cursoNombre = typeof curso === 'object' && curso?.nombre ? curso.nombre : curso;
+
+    info(`🔄 Cambiando estado de estudiante ${chatId} a ${nuevoEstado ? 'habilitado' : 'deshabilitado'}`);
+
+    try {
+        // Usar URL según entorno (proxy local en desarrollo, N8N directo en prod)
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const toggleUrl = isLocalhost
+            ? '/webhook/toggle-estudiante'
+            : 'https://micro-bits-n8n.aejhww.easypanel.host/webhook/toggle-estudiante';
+
+        // Llamar al webhook
+        const response = await fetch(toggleUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chat_id: chatId,
+                habilitado: nuevoEstado,
+                curso: cursoNombre
+            })
+        });
+
+        info(`📡 Response status: ${response.status}`);
+        info(`📡 Response ok: ${response.ok}`);
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener texto primero para debug
+        const responseText = await response.text();
+        info(`📋 Respuesta (${responseText.length} chars):`, responseText);
+
+        if (!responseText || responseText.trim() === '') {
+            throw new Error('Respuesta vacía del servidor');
+        }
+
+        const data = JSON.parse(responseText);
+        info('✅ Respuesta de N8N:', data);
+
+        // Actualizar estado local (como en el código anterior)
+        actualizarEstudianteHabilitado(chatId, nuevoEstado);
+
+        // Re-renderizar tabla con el estado actualizado
+        renderizarEstudiantes();
+
+        mostrarToast(
+            `Estudiante ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente`,
+            'success'
+        );
+        success(`✅ Estudiante ${chatId} ${nuevoEstado ? 'habilitado' : 'deshabilitado'}`);
+
+    } catch (err) {
+        error('❌ Error toggling estudiante:', err);
+        mostrarToast(`Error: ${err.message}`, 'error');
+    }
+}
+
+// ============================================
+// BÚSQUEDA CON DEBOUNCING
+// ============================================
+
+/**
+ * Inicializa el event listener de búsqueda con debouncing
+ * Optimiza el rendimiento evitando renders excesivos mientras el usuario escribe
+ */
+function inicializarBusqueda() {
+    if (!DOM.searchInput) {
+        warn('⚠️ Input de búsqueda no encontrado');
+        return;
+    }
+
+    // Importar setPaginaActual (importado estáticamente al inicio)
+    // Crear función debounceda para la búsqueda (300ms)
+    const buscarDebounced = debounce((valor) => {
+        setTerminoBusqueda(valor);
+        // Resetear página actual al buscar
+        setPaginaActual(1);
+        // Re-renderizar tabla actual
+        renderizarTablaActual();
+    }, 300);
+
+    // Event listener con debouncing
+    DOM.searchInput.addEventListener('input', (e) => {
+        const valor = e.target.value.trim();
+        buscarDebounced(valor);
+    });
+
+    // Limpiar búsqueda con Escape
+    DOM.searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            DOM.searchInput.value = '';
+            setTerminoBusqueda('');
+            renderizarTablaActual();
+        }
+    });
+
+    info('✅ Búsqueda con debouncing inicializada (300ms)');
+}
+
+// ============================================
 // EXPORTAR
 // ============================================
 
@@ -502,6 +624,10 @@ export {
     renderizarTemas,
     renderizarTablaActual,
 
+    // Toggle
+    toggleEstudiante,
+
     // Inicialización
-    inicializarTabs
+    inicializarTabs,
+    inicializarBusqueda
 };

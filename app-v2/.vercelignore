@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.local
+*.backup
+*.bak
+app.js
+app.js.*
+build.js
+test*.js
+test*.html
+debug*.html
+*.md
+!.gitignore

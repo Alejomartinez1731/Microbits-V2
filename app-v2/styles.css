@@ -1332,6 +1332,47 @@ body::before {
     color: var(--text-white);
 }
 
+/* Search Input */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-light-blue);
+    pointer-events: none;
+}
+
+.search-input {
+    padding: 10px 16px 10px 36px;
+    border: var(--border-neon);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-white);
+    background: var(--bg-dark-secondary);
+    min-width: 200px;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: var(--text-light-blue);
+    opacity: 0.7;
+}
+
+.search-input:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.search-input:focus {
+    border-color: var(--neon-blue);
+    box-shadow: var(--shadow-neon);
+}
+
 /* Métricas */
 .metricas-container {
     display: grid;

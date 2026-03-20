@@ -25,6 +25,7 @@ function initDOM() {
     DOM.headerLogo = document.querySelector('.logo');
     DOM.cursoTitulo = document.getElementById('curso-titulo');
     DOM.fechaActual = document.getElementById('fecha-actual');
+    DOM.searchInput = document.getElementById('search-input');
     DOM.cursoSelect = document.getElementById('curso-select');
 
     // === MÉTRICAS ===

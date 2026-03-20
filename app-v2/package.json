@@ -1,0 +1,9 @@
+{
+  "name": "interfaz-microbits",
+  "version": "2.0.0",
+  "description": "Dashboard para gestión de cursos con N8N",
+  "type": "module",
+  "keywords": ["dashboard", "n8n", "education"],
+  "author": "Alejandro Martínez",
+  "license": "MIT"
+}

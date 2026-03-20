@@ -127,6 +127,17 @@ function normalizeContador(cont) {
 }
 
 /**
+ * Limpia comillas escapadas extras de un string (ej: "\"2026-01-26\"" -> "2026-01-26")
+ * @param {string} str - String con posibles comillas escapadas
+ * @returns {string} String limpio
+ */
+function limpiarComillasEscapadas(str) {
+    if (!str || typeof str !== 'string') return str;
+    // Eliminar comillas escapadas al inicio y final
+    return str.replace(/^"|"$/g, '').replace(/\\"/g, '"');
+}
+
+/**
  * Normaliza una pregunta
  * @param {Object} preg - Pregunta cruda
  * @returns {Object} Pregunta normalizada
@@ -141,6 +152,13 @@ function normalizePregunta(preg) {
         };
     }
 
+    // Obtener fecha cruda y limpiar comillas escapadas
+    const fechaCruda = normalizeString(
+        preg,
+        ['Fecha de Pregunta', 'fecha', 'Fecha', 'date', 'timestamp'],
+        ''
+    );
+
     return {
         Nombre: normalizeString(preg, ['Nombre', 'nombre', 'name'], ''),
         Chat_id: normalizeString(preg, ['Chat_id', 'chat_id', 'chatID'], ''),
@@ -149,11 +167,7 @@ function normalizePregunta(preg) {
             ['Preguntas Frecuentes', 'Pregunta', 'pregunta', 'question'],
             ''
         ),
-        'Fecha de Pregunta': normalizeString(
-            preg,
-            ['Fecha de Pregunta', 'fecha', 'Fecha', 'date', 'timestamp'],
-            ''
-        )
+        'Fecha de Pregunta': limpiarComillasEscapadas(fechaCruda)
     };
 }
 
