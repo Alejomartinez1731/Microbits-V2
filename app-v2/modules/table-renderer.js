@@ -844,4 +844,3 @@ export {
     inicializarBusqueda,
     inicializarSortables
 };
-};
