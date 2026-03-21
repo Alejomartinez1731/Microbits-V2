@@ -654,6 +654,177 @@ function inicializarBusqueda() {
 }
 
 // ============================================
+// ORDENAMIENTO DE TABLAS
+// ============================================
+
+// Estado de ordenamiento por tabla
+const sortState = {
+    estudiantes: { column: null, direction: null },
+    preguntas: { column: null, direction: null },
+    activos: { column: null, direction: null },
+    temas: { column: null, direction: null }
+};
+
+/**
+ * Ordena un array de datos según la columna y dirección
+ */
+function ordenarDatos(datos, columna, direccion) {
+    const ordenados = [...datos];
+
+    return ordenados.sort((a, b) => {
+        let valorA, valorB;
+
+        // Extraer valores según la columna
+        switch (columna) {
+            case 'nombre':
+                valorA = a.Nombre?.toLowerCase() || '';
+                valorB = b.Nombre?.toLowerCase() || '';
+                break;
+            case 'chat_id':
+                valorA = a.Chat_id || '';
+                valorB = b.Chat_id || '';
+                break;
+            case 'estado':
+                valorA = (a.habilitado !== false && a.habilitado !== 'false') ? 1 : 0;
+                valorB = (b.habilitado !== false && b.habilitado !== 'false') ? 1 : 0;
+                break;
+            case 'pregunta':
+                valorA = a.Pregunta?.toLowerCase() || '';
+                valorB = b.Pregunta?.toLowerCase() || '';
+                break;
+            case 'fecha':
+                valorA = new Date(a.Fecha || 0).getTime();
+                valorB = new Date(b.Fecha || 0).getTime();
+                break;
+            case 'posicion':
+                valorA = a.posicion || 0;
+                valorB = b.posicion || 0;
+                break;
+            case 'count':
+                valorA = a.count || 0;
+                valorB = b.count || 0;
+                break;
+            case 'tema':
+                valorA = a.tema?.toLowerCase() || '';
+                valorB = b.tema?.toLowerCase() || '';
+                break;
+            default:
+                return 0;
+        }
+
+        // Comparar según dirección
+        if (direccion === 'asc') {
+            return valorA > valorB ? 1 : valorA < valorB ? -1 : 0;
+        } else {
+            return valorA < valorB ? 1 : valorA > valorB ? -1 : 0;
+        }
+    });
+}
+
+/**
+ * Actualiza los indicadores visuales de ordenamiento en los headers
+ */
+function actualizarSortIndicators(tabla, columna, direccion) {
+    const table = document.querySelector(`#tabla-${tabla} table`);
+    if (!table) return;
+
+    // Remover clases anteriores
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) {
+            icon.className = 'sort-icon fas fa-sort';
+        }
+    });
+
+    // Agregar clase al header activo
+    if (columna) {
+        const activeTh = table.querySelector(`th[data-column="${columna}"]`);
+        if (activeTh) {
+            activeTh.classList.add(direccion === 'asc' ? 'sort-asc' : 'sort-desc');
+            const icon = activeTh.querySelector('.sort-icon');
+            if (icon) {
+                icon.className = `sort-icon fas fa-sort-${direccion === 'asc' ? 'up' : 'down'}`;
+            }
+        }
+    }
+}
+
+/**
+ * Maneja el click en un header sortable
+ */
+function handleSortClick(tabla, th) {
+    const columna = th.dataset.column;
+    const defaultDirection = th.dataset.sort || 'asc';
+    const currentState = sortState[tabla];
+
+    let nuevaDireccion;
+
+    if (currentState.column === columna) {
+        // Si ya está ordenado por esta columna, invertir dirección
+        nuevaDireccion = currentState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        // Nueva columna, usar dirección default
+        nuevaDireccion = defaultDirection;
+    }
+
+    // Actualizar estado
+    sortState[tabla] = { column: columna, direction: nuevaDireccion };
+
+    // Actualizar indicadores visuales
+    actualizarSortIndicators(tabla, columna, nuevaDireccion);
+
+    // Re-renderizar tabla con datos ordenados
+    renderizarTablaOrdenada(tabla);
+}
+
+/**
+ * Renderiza una tabla con los datos ordenados
+ */
+function renderizarTablaOrdenada(tabla) {
+    const datos = getDatos(tabla);
+    if (!datos) return;
+
+    const { column, direction } = sortState[tabla];
+
+    // Ordenar datos si hay una columna activa
+    const datosOrdenados = column ? ordenarDatos(datos, column, direction) : datos;
+
+    // Actualizar datos temporalmente para el renderizado
+    const datosOriginales = appState.datos[tabla];
+    appState.datos[tabla] = datosOrdenados;
+
+    // Renderizar
+    if (tabla === 'estudiantes') renderizarEstudiantes();
+    else if (tabla === 'preguntas') renderizarPreguntas();
+    else if (tabla === 'activos') renderizarActivos();
+    else if (tabla === 'temas') renderizarTemas();
+
+    // Restaurar datos originales
+    appState.datos[tabla] = datosOriginales;
+
+    info(`✅ Tabla ${tabla} ordenada por ${column} (${direction})`);
+}
+
+/**
+ * Inicializa los headers ordenables
+ */
+function inicializarSortables() {
+    const tablas = ['estudiantes', 'preguntas', 'activos', 'temas'];
+
+    tablas.forEach(tabla => {
+        const table = document.querySelector(`#tabla-${tabla} table`);
+        if (!table) return;
+
+        table.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => handleSortClick(tabla, th));
+        });
+    });
+
+    info('✅ Headers ordenables inicializados');
+}
+
+// ============================================
 // EXPORTAR
 // ============================================
 
@@ -670,5 +841,7 @@ export {
 
     // Inicialización
     inicializarTabs,
-    inicializarBusqueda
+    inicializarBusqueda,
+    inicializarSortables
+};
 };

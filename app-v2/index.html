@@ -242,9 +242,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Chat ID</th>
-                            <th>Estado</th>
+                            <th class="sortable" data-column="nombre" data-sort="asc">
+                                Nombre <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="chat_id" data-sort="asc">
+                                Chat ID <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="estado" data-sort="asc">
+                                Estado <i class="sort-icon fas fa-sort"></i>
+                            </th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -263,10 +269,18 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Chat ID</th>
-                            <th>Pregunta</th>
-                            <th>Fecha</th>
+                            <th class="sortable" data-column="nombre" data-sort="asc">
+                                Nombre <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="chat_id" data-sort="asc">
+                                Chat ID <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="pregunta" data-sort="asc">
+                                Pregunta <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="fecha" data-sort="desc">
+                                Fecha <i class="sort-icon fas fa-sort-down"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="tbody-preguntas">
@@ -288,10 +302,18 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Posición</th>
-                            <th>Nombre</th>
-                            <th>Chat ID</th>
-                            <th>Preguntas Realizadas</th>
+                            <th class="sortable" data-column="posicion" data-sort="asc">
+                                Posición <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="nombre" data-sort="asc">
+                                Nombre <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="chat_id" data-sort="asc">
+                                Chat ID <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="count" data-sort="desc">
+                                Preguntas Realizadas <i class="sort-icon fas fa-sort-down"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="tbody-activos">
@@ -313,8 +335,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Tema</th>
-                            <th>Consultas</th>
+                            <th class="sortable" data-column="tema" data-sort="asc">
+                                Tema <i class="sort-icon fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-column="count" data-sort="desc">
+                                Consultas <i class="sort-icon fas fa-sort-down"></i>
+                            </th>
                             <th>Porcentaje</th>
                         </tr>
                     </thead>
