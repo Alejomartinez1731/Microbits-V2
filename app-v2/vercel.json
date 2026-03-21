@@ -3,5 +3,11 @@
   "trailingSlash": false,
   "github": {
     "silent": true
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ]
 }

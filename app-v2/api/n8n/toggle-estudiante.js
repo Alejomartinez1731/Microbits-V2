@@ -13,26 +13,51 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
+    // Parsear body si viene como string
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        console.error('Error parsing body:', e);
+      }
+    }
+
     const n8nUrl = `${N8N_BASE_URL}/toggle-estudiante`;
     console.log('Proxying POST to:', n8nUrl);
-    console.log('Body:', req.body);
+    console.log('Body:', body);
 
-    const response = await fetch(n8nUrl, {
+    // Usar fetch igual que el proxy local
+    const fetchResponse = await fetch(n8nUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(body)
     });
 
-    const data = await response.json();
-    console.log('Response status:', response.status);
+    console.log('Response status:', fetchResponse.status);
 
-    res.status(response.status).json(data);
+    // Obtener texto como el proxy local (maneja respuestas vacías)
+    const data = await fetchResponse.text();
+    console.log('Response length:', data.length, 'bytes');
+    console.log('Response:', data);
+
+    // Enviar respuesta con el mismo status
+    res.writeHead(fetchResponse.status, {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(data, 'utf8')
+    });
+    res.end(data);
+
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error in toggle-estudiante:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }
