@@ -2486,6 +2486,61 @@ tbody tr:last-child td {
     background: rgba(255, 255, 255, 0.15);
 }
 
+/* Botón de peligro (eliminar) */
+.btn-danger {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: var(--text-white);
+    border: none;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #ff6666, #ee0000);
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Modal de Confirmación */
+#confirm-modal .modal-content {
+    border-color: rgba(255, 68, 68, 0.3);
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+}
+
+#confirm-modal .modal-header h3 i {
+    color: #ff4444;
+}
+
+#confirm-modal p {
+    font-size: 16px;
+    color: var(--text-white);
+    margin-bottom: 16px;
+}
+
+.confirm-event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: var(--radius-sm);
+}
+
+.event-info-box {
+    font-size: 14px;
+    color: var(--text-light-blue);
+}
+
+.event-info-box strong {
+    color: var(--neon-blue);
+}
+
+#confirm-modal .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
 /* Festivo info en el panel de eventos */
 .festivo-info {
     background: rgba(255, 107, 157, 0.15);

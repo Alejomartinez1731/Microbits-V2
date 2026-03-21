@@ -492,6 +492,44 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmación -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirmar Acción
+                </h3>
+                <button class="modal-close" id="confirm-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">¿Estás seguro de realizar esta acción?</p>
+
+                <div class="confirm-event-details" id="confirm-event-details" style="display: none;">
+                    <div class="event-info-box">
+                        <strong>Evento:</strong> <span id="confirm-event-title"></span>
+                    </div>
+                    <div class="event-info-box">
+                        <strong>Fecha:</strong> <span id="confirm-event-date"></span>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="confirm-cancel">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirm-accept">
+                        <i class="fas fa-trash"></i>
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 🚀 MAIN ENTRY POINT -->
     <script type="module" src="./main.js?v=54"></script>
 </body>

@@ -347,6 +347,14 @@ async function eliminarEvento(eventoId) {
 
         const evento = eventos[index];
 
+        // Mostrar modal de confirmación
+        const confirmado = await mostrarConfirmacionEliminar(evento);
+
+        if (!confirmado) {
+            info('❌ Eliminación cancelada por el usuario');
+            return false;
+        }
+
         // Eliminar del Google Sheet vía N8N
         info('🗑️ Eliminando evento del Google Sheet...');
         info('📤 Enviando al webhook:', { id: eventoId, evento });
@@ -392,6 +400,72 @@ async function eliminarEvento(eventoId) {
         mostrarToast('Error al eliminar evento', 'error');
         return false;
     }
+}
+
+/**
+ * Muestra un modal de confirmación antes de eliminar un evento
+ * @param {Object} evento - Evento a eliminar
+ * @returns {Promise<boolean>} True si el usuario confirma
+ */
+function mostrarConfirmacionEliminar(evento) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const messageEl = document.getElementById('confirm-message');
+        const detailsEl = document.getElementById('confirm-event-details');
+        const titleEventEl = document.getElementById('confirm-event-title');
+        const dateEventEl = document.getElementById('confirm-event-date');
+        const cancelBtn = document.getElementById('confirm-cancel');
+        const acceptBtn = document.getElementById('confirm-accept');
+        const closeBtn = document.getElementById('confirm-close');
+
+        // Configurar contenido
+        titleEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Eliminar Evento';
+        messageEl.textContent = '¿Estás seguro de eliminar este evento? Esta acción no se puede deshacer.';
+
+        // Mostrar detalles del evento
+        detailsEl.style.display = 'flex';
+        titleEventEl.textContent = evento.titulo || 'Sin título';
+        dateEventEl.textContent = evento.fecha || 'Sin fecha';
+
+        // Mostrar modal
+        modal.classList.add('active');
+
+        // Handler para cancelar
+        const onCancel = () => {
+            closeModal();
+            resolve(false);
+        };
+
+        // Handler para aceptar
+        const onAccept = async () => {
+            closeModal();
+            resolve(true);
+        };
+
+        // Cerrar modal
+        const closeModal = () => {
+            modal.classList.remove('active');
+            cancelBtn.removeEventListener('click', onCancel);
+            acceptBtn.removeEventListener('click', onAccept);
+            closeBtn.removeEventListener('click', onCancel);
+        };
+
+        // Event listeners
+        cancelBtn.addEventListener('click', onCancel);
+        acceptBtn.addEventListener('click', onAccept);
+        closeBtn.addEventListener('click', onCancel);
+
+        // Cerrar con Escape
+        const onEsc = (e) => {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', onEsc);
+                closeModal();
+                resolve(false);
+            }
+        };
+        document.addEventListener('keydown', onEsc);
+    });
 }
 
 // ============================================
