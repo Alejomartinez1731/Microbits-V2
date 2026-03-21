@@ -547,11 +547,18 @@ async function toggleEstudiante(chatId, estadoActual) {
         const responseText = await response.text();
         info(`📋 Respuesta (${responseText.length} chars):`, responseText);
 
-        if (!responseText || responseText.trim() === '') {
-            throw new Error('Respuesta vacía del servidor');
+        // N8N a veces devuelve respuesta vacía con status 200 (éxito)
+        // Aceptamos respuesta vacía como éxito si el status es OK
+        let data;
+        if (responseText && responseText.trim() !== '') {
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                data = { success: true };
+            }
+        } else {
+            data = { success: true };
         }
-
-        const data = JSON.parse(responseText);
         info('✅ Respuesta de N8N:', data);
 
         // Actualizar estado local primero
